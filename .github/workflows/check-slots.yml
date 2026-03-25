@@ -1,0 +1,38 @@
+name: Check Keyescape Slots
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # 5분마다 실행
+  workflow_dispatch:          # 수동 실행 (테스트용)
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore last slots cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/last-slots.json
+          key: slots-${{ github.run_id }}
+          restore-keys: slots-
+
+      - name: Check slots and notify
+        env:
+          SITE_URL:             ${{ secrets.SITE_URL }}
+          TELEGRAM_BOT_TOKEN:   ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:     ${{ secrets.TELEGRAM_CHAT_ID }}
+          # 알림 받을 시간대 (0~24). Settings > Variables 에서 재정의 가능
+          MIN_HOUR:             ${{ vars.MIN_HOUR || '0' }}
+          MAX_HOUR:             ${{ vars.MAX_HOUR || '24' }}
+          CACHE_FILE:           /tmp/last-slots.json
+        run: node .github/scripts/check-and-notify.mjs
+
+      - name: Save slots cache
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: /tmp/last-slots.json
+          key: slots-${{ github.run_id }}
