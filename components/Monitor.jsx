@@ -1,5 +1,6 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import RangeSlider from './RangeSlider'
 import './Monitor.css'
 
@@ -16,6 +17,10 @@ const INTERVALS = [
 ]
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+
+const DEFAULT_INTERVAL = 180
+const DEFAULT_MIN_HOUR = 7
+const DEFAULT_MAX_HOUR = 24
 
 function formatDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -137,14 +142,33 @@ function ThemeCard({ theme, data, onRefresh, loading, timeRange }) {
   )
 }
 
-export default function Monitor() {
+function MonitorInner() {
+  const searchParams = useSearchParams()
+  const router       = useRouter()
+  const pathname     = usePathname()
+
+  const intervalSec = Number(searchParams.get('interval'))  || DEFAULT_INTERVAL
+  const minHour     = Number(searchParams.get('minHour'))   || DEFAULT_MIN_HOUR
+  const maxHour     = Number(searchParams.get('maxHour'))   || DEFAULT_MAX_HOUR
+  const timeRange   = [minHour, maxHour]
+
   const [themeData, setThemeData]       = useState({})
   const [loading, setLoading]           = useState({})
   const [allLoading, setAllLoading]     = useState(false)
   const [lastAllCheck, setLastAllCheck] = useState(null)
-  const [interval, setIntervalSec]      = useState(300)
-  const [nextRefresh, setNextRefresh]   = useState(300)
-  const [timeRange, setTimeRange]       = useState([7, 24])
+  const [nextRefresh, setNextRefresh]   = useState(intervalSec)
+
+  const updateParams = useCallback((updates) => {
+    const params = new URLSearchParams(searchParams.toString())
+    for (const [key, val] of Object.entries(updates)) {
+      params.set(key, String(val))
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [searchParams, router, pathname])
+
+  const handleReset = () => {
+    router.replace(pathname, { scroll: false })
+  }
 
   const fetchTheme = useCallback(async (id) => {
     setLoading(prev => ({ ...prev, [id]: true }))
@@ -179,25 +203,26 @@ export default function Monitor() {
 
   useEffect(() => {
     fetchAll()
-    setNextRefresh(interval)
-    const timer = setInterval(fetchAll, interval * 1000)
+    setNextRefresh(intervalSec)
+    const timer = setInterval(fetchAll, intervalSec * 1000)
     return () => clearInterval(timer)
-  }, [fetchAll, interval])
-
-  useEffect(() => {
-    setNextRefresh(interval)
-  }, [interval])
+  }, [fetchAll, intervalSec])
 
   useEffect(() => {
     const tick = setInterval(() => {
-      setNextRefresh(prev => (prev <= 1 ? interval : prev - 1))
+      setNextRefresh(prev => (prev <= 1 ? intervalSec : prev - 1))
     }, 1000)
     return () => clearInterval(tick)
-  }, [interval])
+  }, [intervalSec])
 
   const totalDates = Object.values(themeData).reduce(
     (sum, d) => sum + Object.keys(d?.slots ?? {}).length, 0
   )
+
+  const isDefault =
+    intervalSec === DEFAULT_INTERVAL &&
+    minHour === DEFAULT_MIN_HOUR &&
+    maxHour === DEFAULT_MAX_HOUR
 
   return (
     <div className="app">
@@ -226,7 +251,10 @@ export default function Monitor() {
 
       <div className="filter-card">
         <span className="filter-title">시간대 필터</span>
-        <RangeSlider value={timeRange} onChange={setTimeRange} />
+        <RangeSlider
+          value={timeRange}
+          onChange={([min, max]) => updateParams({ minHour: min, maxHour: max })}
+        />
       </div>
 
       <div className="summary-bar">
@@ -241,8 +269,8 @@ export default function Monitor() {
           {INTERVALS.map(({ label, seconds }) => (
             <button
               key={seconds}
-              className={`interval-btn${interval === seconds ? ' active' : ''}`}
-              onClick={() => setIntervalSec(seconds)}
+              className={`interval-btn${intervalSec === seconds ? ' active' : ''}`}
+              onClick={() => updateParams({ interval: seconds })}
             >
               {label}
             </button>
@@ -250,6 +278,14 @@ export default function Monitor() {
           {lastAllCheck && (
             <span className="countdown">{nextRefresh}초 후</span>
           )}
+          <button
+            className={`btn-reset${isDefault ? ' btn-reset-disabled' : ''}`}
+            onClick={handleReset}
+            disabled={isDefault}
+            title="필터 초기화"
+          >
+            초기화
+          </button>
         </div>
       </div>
 
@@ -266,5 +302,13 @@ export default function Monitor() {
         ))}
       </div>
     </div>
+  )
+}
+
+export default function Monitor() {
+  return (
+    <Suspense>
+      <MonitorInner />
+    </Suspense>
   )
 }

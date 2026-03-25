@@ -117,6 +117,21 @@
 .interval-btn:hover  { background: #22223a; color: #aaa; }
 .interval-btn.active { background: #5b5ef722; color: #8b8ef7; border-color: #5b5ef755; }
 
+.btn-reset {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #3a2a2a;
+  background: #261a1a;
+  color: #e07070;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  margin-left: 4px;
+}
+.btn-reset:hover { background: #3a2020; color: #f08080; }
+.btn-reset.btn-reset-disabled { opacity: 0.3; cursor: not-allowed; }
+
 /* ── Cards grid ──────────────────────────────── */
 .cards-grid {
   display: grid;
