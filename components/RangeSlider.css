@@ -1,0 +1,79 @@
+.rs-wrap {
+  width: 100%;
+  padding: 0 4px;
+}
+
+.rs-label {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #6eb3f7;
+  margin-bottom: 14px;
+  letter-spacing: -0.2px;
+}
+
+.rs-track-wrap {
+  position: relative;
+  height: 6px;
+  background: #2a2a3a;
+  border-radius: 3px;
+  margin: 0 8px;
+}
+
+.rs-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: #5b5ef7;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* 두 input을 완전히 겹침 */
+.rs-input {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  transform: translateY(-50%);
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  pointer-events: none;
+  height: 6px;
+  margin: 0;
+  outline: none;
+}
+
+/* 핸들 */
+.rs-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #5b5ef7;
+  cursor: pointer;
+  pointer-events: all;
+  box-shadow: 0 1px 6px rgba(0,0,0,.5);
+  transition: transform .12s, box-shadow .12s;
+}
+.rs-input::-webkit-slider-thumb:hover,
+.rs-input:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(91,94,247,.25);
+}
+
+/* z-index: min이 앞에 오도록 상황에 따라 조정 */
+.rs-input-min { z-index: 3; }
+.rs-input-max { z-index: 4; }
+
+.rs-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+  font-size: 11px;
+  color: #555;
+}
