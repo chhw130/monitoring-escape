@@ -3,9 +3,15 @@ import { readFileSync, writeFileSync } from 'fs'
 const SITE_URL  = process.env.SITE_URL
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const CHAT_ID   = process.env.TELEGRAM_CHAT_ID
-const MIN_HOUR  = parseInt(process.env.MIN_HOUR ?? '0')
-const MAX_HOUR  = parseInt(process.env.MAX_HOUR ?? '24')
 const CACHE_FILE = process.env.CACHE_FILE || '/tmp/last-slots.json'
+
+// 평일: 17시 이후 / 주말: 전체
+function isTimeAllowed(dateStr, timeStr) {
+  const dow = new Date(dateStr + 'T00:00:00').getDay() // 0=일, 6=토
+  const isWeekend = dow === 0 || dow === 6
+  if (isWeekend) return true
+  return parseInt(timeStr.split(':')[0]) >= 17
+}
 
 const THEME_NAMES = {
   tutu:   '투투 어드벤처 🗺️',
@@ -26,10 +32,7 @@ const available = {}
 for (const [themeId, themeData] of Object.entries(data)) {
   const filtered = {}
   for (const [date, times] of Object.entries(themeData.slots ?? {})) {
-    const filteredTimes = times.filter(t => {
-      const h = parseInt(t.split(':')[0])
-      return h >= MIN_HOUR && h < MAX_HOUR
-    })
+    const filteredTimes = times.filter(t => isTimeAllowed(date, t))
     if (filteredTimes.length > 0) filtered[date] = filteredTimes
   }
   if (Object.keys(filtered).length > 0) available[themeId] = filtered
