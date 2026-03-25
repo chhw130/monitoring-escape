@@ -24,6 +24,8 @@ jobs:
           SITE_URL:             ${{ secrets.SITE_URL }}
           TELEGRAM_BOT_TOKEN:   ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:     ${{ secrets.TELEGRAM_CHAT_ID }}
+          NOTIFY_WEEKDAY_MIN:   ${{ vars.NOTIFY_WEEKDAY_MIN || '17' }}
+          NOTIFY_WEEKEND_MIN:   ${{ vars.NOTIFY_WEEKEND_MIN || '0' }}
           CACHE_FILE:           /tmp/last-slots.json
         run: node .github/scripts/check-and-notify.mjs
 

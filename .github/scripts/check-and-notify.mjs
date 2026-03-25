@@ -5,12 +5,14 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
 const CHAT_ID   = process.env.TELEGRAM_CHAT_ID
 const CACHE_FILE = process.env.CACHE_FILE || '/tmp/last-slots.json'
 
-// 평일: 17시 이후 / 주말: 전체
+const WEEKDAY_MIN = parseInt(process.env.NOTIFY_WEEKDAY_MIN ?? '17')
+const WEEKEND_MIN = parseInt(process.env.NOTIFY_WEEKEND_MIN ?? '0')
+
 function isTimeAllowed(dateStr, timeStr) {
   const dow = new Date(dateStr + 'T00:00:00').getDay() // 0=일, 6=토
   const isWeekend = dow === 0 || dow === 6
-  if (isWeekend) return true
-  return parseInt(timeStr.split(':')[0]) >= 17
+  const hour = parseInt(timeStr.split(':')[0])
+  return hour >= (isWeekend ? WEEKEND_MIN : WEEKDAY_MIN)
 }
 
 const THEME_NAMES = {

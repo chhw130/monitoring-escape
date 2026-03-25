@@ -156,6 +156,10 @@ function MonitorInner() {
   const [allLoading, setAllLoading]     = useState(false)
   const [lastAllCheck, setLastAllCheck] = useState(null)
   const [nextRefresh, setNextRefresh]   = useState(intervalSec)
+  const [notifyOpen, setNotifyOpen]     = useState(false)
+  const [notifySettings, setNotifySettings] = useState({ weekdayMin: 17, weekendMin: 0 })
+  const [notifySaving, setNotifySaving] = useState(false)
+  const [notifySaved, setNotifySaved]   = useState(false)
   // 슬라이더는 로컬 state로 즉시 반응, URL은 드래그 종료 후 업데이트
   const [localTimeRange, setLocalTimeRange] = useState([minHour, maxHour])
   const rangeUpdateTimer = useRef(null)
@@ -185,6 +189,32 @@ function MonitorInner() {
 
   const handleReset = () => {
     router.replace(pathname, { scroll: false })
+  }
+
+  // 알림 설정 불러오기
+  useEffect(() => {
+    fetch('/api/notify-settings')
+      .then(r => r.json())
+      .then(data => setNotifySettings({
+        weekdayMin: Number(data.NOTIFY_WEEKDAY_MIN ?? 17),
+        weekendMin: Number(data.NOTIFY_WEEKEND_MIN ?? 0),
+      }))
+      .catch(() => {})
+  }, [])
+
+  const saveNotifySettings = async () => {
+    setNotifySaving(true)
+    await fetch('/api/notify-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        NOTIFY_WEEKDAY_MIN: String(notifySettings.weekdayMin),
+        NOTIFY_WEEKEND_MIN: String(notifySettings.weekendMin),
+      }),
+    })
+    setNotifySaving(false)
+    setNotifySaved(true)
+    setTimeout(() => setNotifySaved(false), 2000)
   }
 
   const fetchTheme = useCallback(async (id) => {
@@ -272,6 +302,47 @@ function MonitorInner() {
           value={localTimeRange}
           onChange={handleRangeChange}
         />
+      </div>
+
+      <div className="notify-card">
+        <button className="notify-toggle" onClick={() => setNotifyOpen(o => !o)}>
+          🔔 텔레그램 알림 설정 <span className="notify-arrow">{notifyOpen ? '▲' : '▼'}</span>
+        </button>
+        {notifyOpen && (
+          <div className="notify-body">
+            <div className="notify-row">
+              <span className="notify-label">평일 알림 시작</span>
+              <select
+                className="notify-select"
+                value={notifySettings.weekdayMin}
+                onChange={e => setNotifySettings(s => ({ ...s, weekdayMin: Number(e.target.value) }))}
+              >
+                {Array.from({ length: 25 }, (_, i) => (
+                  <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
+                ))}
+              </select>
+            </div>
+            <div className="notify-row">
+              <span className="notify-label">주말 알림 시작</span>
+              <select
+                className="notify-select"
+                value={notifySettings.weekendMin}
+                onChange={e => setNotifySettings(s => ({ ...s, weekendMin: Number(e.target.value) }))}
+              >
+                {Array.from({ length: 25 }, (_, i) => (
+                  <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              className="notify-save"
+              onClick={saveNotifySettings}
+              disabled={notifySaving}
+            >
+              {notifySaving ? '저장 중...' : notifySaved ? '✓ 저장됨' : '저장'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="summary-bar">
