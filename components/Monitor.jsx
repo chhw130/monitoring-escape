@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import RangeSlider from './RangeSlider'
 import './Monitor.css'
@@ -150,13 +150,22 @@ function MonitorInner() {
   const intervalSec = Number(searchParams.get('interval'))  || DEFAULT_INTERVAL
   const minHour     = Number(searchParams.get('minHour'))   || DEFAULT_MIN_HOUR
   const maxHour     = Number(searchParams.get('maxHour'))   || DEFAULT_MAX_HOUR
-  const timeRange   = [minHour, maxHour]
 
   const [themeData, setThemeData]       = useState({})
   const [loading, setLoading]           = useState({})
   const [allLoading, setAllLoading]     = useState(false)
   const [lastAllCheck, setLastAllCheck] = useState(null)
   const [nextRefresh, setNextRefresh]   = useState(intervalSec)
+  // 슬라이더는 로컬 state로 즉시 반응, URL은 드래그 종료 후 업데이트
+  const [localTimeRange, setLocalTimeRange] = useState([minHour, maxHour])
+  const rangeUpdateTimer = useRef(null)
+
+  // 리셋 등 외부 URL 변경 시 로컬 state 동기화 (값이 다를 때만)
+  useEffect(() => {
+    setLocalTimeRange(prev =>
+      prev[0] === minHour && prev[1] === maxHour ? prev : [minHour, maxHour]
+    )
+  }, [minHour, maxHour])
 
   const updateParams = useCallback((updates) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -165,6 +174,14 @@ function MonitorInner() {
     }
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [searchParams, router, pathname])
+
+  const handleRangeChange = useCallback(([min, max]) => {
+    setLocalTimeRange([min, max])
+    clearTimeout(rangeUpdateTimer.current)
+    rangeUpdateTimer.current = setTimeout(() => {
+      updateParams({ minHour: min, maxHour: max })
+    }, 300)
+  }, [updateParams])
 
   const handleReset = () => {
     router.replace(pathname, { scroll: false })
@@ -221,8 +238,8 @@ function MonitorInner() {
 
   const isDefault =
     intervalSec === DEFAULT_INTERVAL &&
-    minHour === DEFAULT_MIN_HOUR &&
-    maxHour === DEFAULT_MAX_HOUR
+    localTimeRange[0] === DEFAULT_MIN_HOUR &&
+    localTimeRange[1] === DEFAULT_MAX_HOUR
 
   return (
     <div className="app">
@@ -252,8 +269,8 @@ function MonitorInner() {
       <div className="filter-card">
         <span className="filter-title">시간대 필터</span>
         <RangeSlider
-          value={timeRange}
-          onChange={([min, max]) => updateParams({ minHour: min, maxHour: max })}
+          value={localTimeRange}
+          onChange={handleRangeChange}
         />
       </div>
 
@@ -297,7 +314,7 @@ function MonitorInner() {
             data={themeData[theme.id] ?? null}
             loading={loading[theme.id] ?? false}
             onRefresh={() => fetchTheme(theme.id)}
-            timeRange={timeRange}
+            timeRange={localTimeRange}
           />
         ))}
       </div>
