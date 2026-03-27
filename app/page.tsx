@@ -1,5 +1,5 @@
-import Monitor from '@/components/Monitor'
+import MainPage from '@/components/MainPage'
 
 export default function Home() {
-  return <Monitor />
+  return <MainPage />
 }

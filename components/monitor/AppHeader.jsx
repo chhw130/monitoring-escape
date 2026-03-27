@@ -1,11 +1,13 @@
 import { memo } from 'react'
+import Link from 'next/link'
 
-const AppHeader = memo(function AppHeader({ onRefreshAll, loading, lastAllCheck }) {
+const AppHeader = memo(function AppHeader({ onRefreshAll, loading, lastAllCheck, branchName, themeCount }) {
   return (
     <header className="app-header">
       <div>
-        <h1 className="app-title">키이스케이프 예약 모니터</h1>
-        <p className="app-sub">홍대점 · 3개 테마 실시간 모니터링</p>
+        <Link href="/" className="back-link">← 지점 목록</Link>
+        <h1 className="app-title">{branchName}</h1>
+        <p className="app-sub">{themeCount}개 테마 실시간 모니터링</p>
       </div>
       <div className="header-right">
         <button className="btn-all" onClick={onRefreshAll} disabled={loading}>

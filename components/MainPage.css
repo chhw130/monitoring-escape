@@ -1,0 +1,103 @@
+.main-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 20px;
+}
+
+.main-header {
+  margin-bottom: 40px;
+}
+
+.main-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #e2e2ec;
+  letter-spacing: -0.5px;
+}
+
+.main-sub {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #666;
+}
+
+.branch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.branch-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #13131f;
+  border: 1px solid #1e1e2e;
+  border-radius: 16px;
+  padding: 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, transform .15s;
+}
+
+.branch-card:hover {
+  border-color: #5b5ef755;
+  transform: translateY(-2px);
+}
+
+.branch-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.branch-brand {
+  font-size: 12px;
+  color: #5b5ef7;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.branch-location {
+  font-size: 12px;
+  color: #555;
+}
+
+.branch-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #e2e2ec;
+}
+
+.branch-themes {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.branch-theme-item {
+  font-size: 13px;
+  color: #888;
+  padding-left: 4px;
+}
+
+.branch-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid #1e1e2e;
+}
+
+.branch-theme-count {
+  font-size: 12px;
+  color: #555;
+}
+
+.branch-cta {
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b5ef7;
+}

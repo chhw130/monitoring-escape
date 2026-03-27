@@ -8,17 +8,21 @@ import SummaryBar    from './monitor/SummaryBar'
 import ThemeCard     from './monitor/ThemeCard'
 import './Monitor.css'
 
-const THEMES = [
-  { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=69&theme_info_num=60' },
-  { id: 'ayako',  name: 'AYAKO',        emoji: '🎭', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=71&theme_info_num=63' },
-  { id: 'goerok', name: '괴록',          emoji: '👻', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=70&theme_info_num=61' },
+const ALL_THEMES = [
+  { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️', branchId: 'whosthere', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=69&theme_info_num=60' },
+  { id: 'ayako',  name: 'AYAKO',        emoji: '🎭', branchId: 'whosthere', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=71&theme_info_num=63' },
+  { id: 'goerok', name: '괴록',          emoji: '👻', branchId: 'whosthere', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=70&theme_info_num=61' },
 ]
 
 const DEFAULT_INTERVAL = 180
 const DEFAULT_MIN_HOUR = 7
 const DEFAULT_MAX_HOUR = 24
 
-function MonitorInner() {
+function MonitorInner({ branchId, branchName }) {
+  const THEMES = useMemo(() =>
+    ALL_THEMES.filter(t => t.branchId === branchId),
+    [branchId]
+  )
   const searchParams = useSearchParams()
   const router       = useRouter()
   const pathname     = usePathname()
@@ -120,7 +124,7 @@ function MonitorInner() {
 
   return (
     <div className="app">
-      <AppHeader onRefreshAll={fetchAll} loading={allLoading} lastAllCheck={lastAllCheck} />
+      <AppHeader onRefreshAll={fetchAll} loading={allLoading} lastAllCheck={lastAllCheck} branchName={branchName} themeCount={THEMES.length} />
 
       <div className="legend-bar">
         <span className="chip chip-blue">~12시</span>
@@ -158,10 +162,10 @@ function MonitorInner() {
   )
 }
 
-export default function Monitor() {
+export default function Monitor({ branchId, branchName }) {
   return (
     <Suspense>
-      <MonitorInner />
+      <MonitorInner branchId={branchId} branchName={branchName} />
     </Suspense>
   )
 }
