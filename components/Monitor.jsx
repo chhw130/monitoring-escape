@@ -306,7 +306,7 @@ function MonitorInner() {
 
       <div className="notify-card">
         <button className="notify-toggle" onClick={() => setNotifyOpen(o => !o)}>
-          🔔 텔레그램 알림 설정 <span className="notify-arrow">{notifyOpen ? '▲' : '▼'}</span>
+          🔔 Discord 알림 설정 <span className="notify-arrow">{notifyOpen ? '▲' : '▼'}</span>
         </button>
         {notifyOpen && (
           <div className="notify-body">

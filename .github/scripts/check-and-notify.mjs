@@ -1,8 +1,5 @@
-import { readFileSync, writeFileSync } from 'fs'
-
 const SITE_URL    = process.env.SITE_URL
 const DISCORD_URL = process.env.DISCORD_WEBHOOK_URL
-const CACHE_FILE  = process.env.CACHE_FILE || '/tmp/last-slots.json'
 
 const WEEKDAY_MIN = parseInt(process.env.NOTIFY_WEEKDAY_MIN ?? '17')
 const WEEKEND_MIN = parseInt(process.env.NOTIFY_WEEKEND_MIN ?? '0')
@@ -50,22 +47,6 @@ if (Object.keys(available).length === 0) {
   console.log('예약 가능한 슬롯 없음')
   process.exit(0)
 }
-
-// 이전 상태와 비교 (중복 알림 방지)
-const currentHash = JSON.stringify(
-  Object.fromEntries(Object.entries(available).map(([id, d]) => [id, d.slots]))
-)
-let lastHash = ''
-try {
-  lastHash = readFileSync(CACHE_FILE, 'utf8')
-} catch {}
-
-if (currentHash === lastHash) {
-  console.log('변경 없음, 알림 생략')
-  process.exit(0)
-}
-
-writeFileSync(CACHE_FILE, currentHash)
 
 // Discord 메시지 생성
 let message = '🔔 **키이스케이프 예약 가능!**\n\n'
