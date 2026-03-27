@@ -1,26 +1,43 @@
 import { useState, useEffect, useCallback } from 'react'
 import './NotifyModal.css'
 
+// 요일 인덱스: 0=일, 1=월, ..., 6=토
+const DAYS = ['일', '월', '화', '수', '목', '금', '토']
+const WEEKDAY_IDX = [1, 2, 3, 4, 5]
+const WEEKEND_IDX = [0, 6]
+const DEFAULT_DAY_MIN = [0, 17, 17, 17, 17, 17, 0] // 일~토
+
+function parseDayMin(str) {
+  const parts = str.split(',').map(Number)
+  if (parts.length === 7 && parts.every(n => !isNaN(n))) return parts
+  return [...DEFAULT_DAY_MIN]
+}
+
 export default function NotifyModal({ branches, onClose }) {
-  const [settings, setSettings]     = useState({ weekdayMin: 17, weekendMin: 0 })
+  const [dayMin, setDayMin]             = useState(DEFAULT_DAY_MIN)
   const [notifyThemes, setNotifyThemes] = useState(new Set())
-  const [saving, setSaving]         = useState(false)
-  const [saved, setSaved]           = useState(false)
+  const [saving, setSaving]             = useState(false)
+  const [saved, setSaved]               = useState(false)
 
   useEffect(() => {
     fetch('/api/notify-settings')
       .then(r => r.json())
       .then(data => {
-        setSettings({
-          weekdayMin: Number(data.NOTIFY_WEEKDAY_MIN ?? 17),
-          weekendMin: Number(data.NOTIFY_WEEKEND_MIN ?? 0),
-        })
-        const saved = (data.NOTIFY_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
-        const all   = branches.flatMap(b => b.themes.map(t => t.id))
-        setNotifyThemes(new Set(saved.length ? saved : all))
+        setDayMin(parseDayMin(data.NOTIFY_DAY_MIN ?? ''))
+        const savedThemes = (data.NOTIFY_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        const all = branches.flatMap(b => b.themes.map(t => t.id))
+        setNotifyThemes(new Set(savedThemes.length ? savedThemes : all))
       })
       .catch(() => {})
   }, [branches])
+
+  const setDay = useCallback((idx, val) => {
+    setDayMin(prev => prev.map((v, i) => i === idx ? val : v))
+  }, [])
+
+  const setBatch = useCallback((indices, val) => {
+    setDayMin(prev => prev.map((v, i) => indices.includes(i) ? val : v))
+  }, [])
 
   const toggleTheme = useCallback((id) => {
     setNotifyThemes(prev => {
@@ -44,9 +61,8 @@ export default function NotifyModal({ branches, onClose }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        NOTIFY_WEEKDAY_MIN: String(settings.weekdayMin),
-        NOTIFY_WEEKEND_MIN: String(settings.weekendMin),
-        NOTIFY_THEMES: [...notifyThemes].join(','),
+        NOTIFY_DAY_MIN: dayMin.join(','),
+        NOTIFY_THEMES:  [...notifyThemes].join(','),
       }),
     }).catch(console.error)
     setSaving(false)
@@ -58,6 +74,14 @@ export default function NotifyModal({ branches, onClose }) {
     if (e.target === e.currentTarget) onClose()
   }, [onClose])
 
+  const HourSelect = ({ value, onChange }) => (
+    <select className="modal-select" value={value} onChange={e => onChange(Number(e.target.value))}>
+      {Array.from({ length: 25 }, (_, i) => (
+        <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
+      ))}
+    </select>
+  )
+
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal">
@@ -68,37 +92,35 @@ export default function NotifyModal({ branches, onClose }) {
 
         <div className="modal-body">
           <section className="modal-section">
-            <h3 className="modal-section-title">알림 시간</h3>
-            <div className="modal-row">
-              <span className="modal-label">평일 알림 시작</span>
-              <select
-                className="modal-select"
-                value={settings.weekdayMin}
-                onChange={e => setSettings(s => ({ ...s, weekdayMin: Number(e.target.value) }))}
-              >
-                {Array.from({ length: 25 }, (_, i) => (
-                  <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
-                ))}
-              </select>
+            <h3 className="modal-section-title">요일별 알림 시작 시간</h3>
+
+            <div className="modal-batch-row">
+              <span className="modal-label">평일 일괄</span>
+              <HourSelect
+                value={dayMin[1]}
+                onChange={v => setBatch(WEEKDAY_IDX, v)}
+              />
+              <span className="modal-label modal-label-gap">주말 일괄</span>
+              <HourSelect
+                value={dayMin[0]}
+                onChange={v => setBatch(WEEKEND_IDX, v)}
+              />
             </div>
-            <div className="modal-row">
-              <span className="modal-label">주말 알림 시작</span>
-              <select
-                className="modal-select"
-                value={settings.weekendMin}
-                onChange={e => setSettings(s => ({ ...s, weekendMin: Number(e.target.value) }))}
-              >
-                {Array.from({ length: 25 }, (_, i) => (
-                  <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
-                ))}
-              </select>
+
+            <div className="modal-day-grid">
+              {DAYS.map((label, idx) => (
+                <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
+                  <span className="modal-day-label">{label}</span>
+                  <HourSelect value={dayMin[idx]} onChange={v => setDay(idx, v)} />
+                </div>
+              ))}
             </div>
           </section>
 
           <section className="modal-section">
             <h3 className="modal-section-title">알림 테마</h3>
             {branches.map(branch => {
-              const ids       = branch.themes.map(t => t.id)
+              const ids = branch.themes.map(t => t.id)
               const allChecked = ids.every(id => notifyThemes.has(id))
               return (
                 <div key={branch.id} className="modal-branch">

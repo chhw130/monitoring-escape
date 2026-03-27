@@ -1,15 +1,15 @@
-const SITE_URL       = process.env.SITE_URL
-const DISCORD_URL    = process.env.DISCORD_WEBHOOK_URL
-const NOTIFY_THEMES  = new Set((process.env.NOTIFY_THEMES || 'tutu,ayako,goerok').split(',').map(s => s.trim()))
+const SITE_URL      = process.env.SITE_URL
+const DISCORD_URL   = process.env.DISCORD_WEBHOOK_URL
+const NOTIFY_THEMES = new Set((process.env.NOTIFY_THEMES || 'tutu,ayako,goerok').split(',').map(s => s.trim()))
 
-const WEEKDAY_MIN = parseInt(process.env.NOTIFY_WEEKDAY_MIN ?? '17')
-const WEEKEND_MIN = parseInt(process.env.NOTIFY_WEEKEND_MIN ?? '0')
+// 요일별 알림 시작 시간 (0=일 ~ 6=토), 기본: 주말 전체, 평일 17시 이후
+const DAY_MIN = (process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0')
+  .split(',').map(Number)
 
 function isTimeAllowed(dateStr, timeStr) {
-  const dow = new Date(dateStr + 'T00:00:00').getDay() // 0=일, 6=토
-  const isWeekend = dow === 0 || dow === 6
+  const dow  = new Date(dateStr + 'T00:00:00').getDay()
   const hour = parseInt(timeStr.split(':')[0])
-  return hour >= (isWeekend ? WEEKEND_MIN : WEEKDAY_MIN)
+  return hour >= DAY_MIN[dow]
 }
 
 // 슬롯 조회 (lib/keyescape.js에서 isBookable 필터 적용된 결과)

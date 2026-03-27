@@ -1,11 +1,10 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import AppHeader      from './monitor/AppHeader'
-import FilterCard     from './monitor/FilterCard'
-import NotifySettings from './monitor/NotifySettings'
-import SummaryBar     from './monitor/SummaryBar'
-import ThemeCard      from './monitor/ThemeCard'
+import AppHeader from './monitor/AppHeader'
+import FilterCard from './monitor/FilterCard'
+import SummaryBar from './monitor/SummaryBar'
+import ThemeCard  from './monitor/ThemeCard'
 import './Monitor.css'
 
 const ALL_THEMES = [
@@ -161,8 +160,6 @@ function MonitorInner({ branchId, branchName }) {
       </div>
 
       <FilterCard value={localTimeRange} onChange={handleRangeChange} />
-
-      <NotifySettings />
 
       <SummaryBar
         totalDates={totalDates}
