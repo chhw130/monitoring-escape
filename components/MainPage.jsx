@@ -16,6 +16,18 @@ const BRANCHES = [
       { id: 'goerok', name: '괴록',          emoji: '👻' },
     ],
   },
+  {
+    id: 'oasis-hongdae',
+    brand: '오아시스뮤지엄',
+    name: '홍대점',
+    location: '홍대',
+    themes: [
+      { id: 'oasis-1', name: '업사이드 다운',      emoji: '🙃' },
+      { id: 'oasis-5', name: '미씽 삭스 미스터리', emoji: '🧦' },
+      { id: 'oasis-6', name: '배드 타임',          emoji: '😈' },
+      { id: 'oasis-8', name: '하이 맥스',          emoji: '🏆' },
+    ],
+  },
 ]
 
 export default function MainPage() {

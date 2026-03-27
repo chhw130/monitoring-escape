@@ -8,9 +8,13 @@ import ThemeCard  from './monitor/ThemeCard'
 import './Monitor.css'
 
 const ALL_THEMES = [
-  { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️', branchId: 'whosthere', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=69&theme_info_num=60' },
-  { id: 'ayako',  name: 'AYAKO',        emoji: '🎭', branchId: 'whosthere', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=71&theme_info_num=63' },
-  { id: 'goerok', name: '괴록',          emoji: '👻', branchId: 'whosthere', reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=70&theme_info_num=61' },
+  { id: 'tutu',    name: '투투 어드벤처',      emoji: '🗺️', branchId: 'whosthere',    reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=69&theme_info_num=60' },
+  { id: 'ayako',   name: 'AYAKO',             emoji: '🎭', branchId: 'whosthere',    reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=71&theme_info_num=63' },
+  { id: 'goerok',  name: '괴록',               emoji: '👻', branchId: 'whosthere',    reserveUrl: 'https://www.keyescape.com/reservation1.php?zizum_num=23&theme_num=70&theme_info_num=61' },
+  { id: 'oasis-1', name: '업사이드 다운',      emoji: '🙃', branchId: 'oasis-hongdae', reserveUrl: 'https://oasismuseum.com/ticket?id=1' },
+  { id: 'oasis-5', name: '미씽 삭스 미스터리', emoji: '🧦', branchId: 'oasis-hongdae', reserveUrl: 'https://oasismuseum.com/ticket?id=5' },
+  { id: 'oasis-6', name: '배드 타임',          emoji: '😈', branchId: 'oasis-hongdae', reserveUrl: 'https://oasismuseum.com/ticket?id=6' },
+  { id: 'oasis-8', name: '하이 맥스',          emoji: '🏆', branchId: 'oasis-hongdae', reserveUrl: 'https://oasismuseum.com/ticket?id=8' },
 ]
 
 const DEFAULT_INTERVAL = 180
