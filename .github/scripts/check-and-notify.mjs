@@ -6,10 +6,14 @@ const NOTIFY_THEMES = new Set((process.env.NOTIFY_THEMES || 'tutu,ayako,goerok')
 const DAY_MIN = (process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0')
   .split(',').map(Number)
 
-function isTimeAllowed(dateStr, timeStr) {
-  const dow  = new Date(dateStr + 'T00:00:00').getDay()
-  const hour = parseInt(timeStr.split(':')[0])
-  return hour >= DAY_MIN[dow]
+// 테마별 개별 설정 (없으면 글로벌 DAY_MIN 사용)
+const THEME_SETTINGS = JSON.parse(process.env.NOTIFY_THEME_SETTINGS || '{}')
+
+function isTimeAllowed(dateStr, timeStr, themeId) {
+  const dow     = new Date(dateStr + 'T00:00:00').getDay()
+  const hour    = parseInt(timeStr.split(':')[0])
+  const dayMin  = THEME_SETTINGS[themeId]?.dayMin ?? DAY_MIN
+  return hour >= dayMin[dow]
 }
 
 // 슬롯 조회 (lib/keyescape.js에서 isBookable 필터 적용된 결과)
@@ -25,7 +29,7 @@ const available = {}
 for (const [themeId, themeData] of Object.entries(data).filter(([id]) => NOTIFY_THEMES.has(id))) {
   const filtered = {}
   for (const [date, times] of Object.entries(themeData.slots ?? {})) {
-    const filteredTimes = times.filter(t => isTimeAllowed(date, t))
+    const filteredTimes = times.filter(t => isTimeAllowed(date, t, themeId))
     if (filteredTimes.length > 0) filtered[date] = filteredTimes
   }
   if (Object.keys(filtered).length > 0) available[themeId] = { ...themeData, slots: filtered }
