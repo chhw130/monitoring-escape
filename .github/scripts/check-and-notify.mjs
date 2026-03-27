@@ -40,8 +40,11 @@ if (Object.keys(available).length === 0) {
 let message = '🔔 **키이스케이프 예약 가능!**\n\n'
 for (const [, themeData] of Object.entries(available)) {
   const { name, emoji, branch, openDaysAhead, openHour, slots, reserveUrl } = themeData
+  const openInfo = (openDaysAhead != null && openHour != null)
+    ? `${openDaysAhead}일 전 ${openHour}시`
+    : '-'
   message += `**[${branch}] ${name} ${emoji}**`
-  message += ` *(예약 오픈: ${openDaysAhead}일 전 오전 ${openHour}시)*\n`
+  message += ` *(예약 오픈: ${openInfo})*\n`
   for (const [date, times] of Object.entries(slots)) {
     const d = new Date(date + 'T00:00:00')
     const label = `${d.getMonth() + 1}/${d.getDate()}(${['일','월','화','수','목','금','토'][d.getDay()]})`
