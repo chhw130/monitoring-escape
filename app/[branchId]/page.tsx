@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation'
 import { BRANCHES } from '@/lib/keyescape'
 import { OASIS_BRANCHES } from '@/lib/oasismuseum'
+import { FRANK_BRANCHES } from '@/lib/frank'
 import Monitor from '@/components/Monitor'
 
-const ALL_BRANCHES = [...BRANCHES, ...OASIS_BRANCHES]
+const ALL_BRANCHES = [...BRANCHES, ...OASIS_BRANCHES, ...FRANK_BRANCHES]
 
 interface Props {
   params: Promise<{ branchId: string }>

@@ -28,6 +28,17 @@ const BRANCHES = [
       { id: 'oasis-8', name: '하이 맥스',          emoji: '🏆' },
     ],
   },
+  {
+    id: 'frank',
+    brand: '프랭크',
+    name: '프랭크의 골동품가게',
+    location: '강남',
+    themes: [
+      { id: 'frank-5', name: 'My Private Heaven',     emoji: '🏠' },
+      { id: 'frank-6', name: 'Brooklyn My Love',      emoji: '🌆' },
+      { id: 'frank-7', name: 'Plan to save my dear',  emoji: '🎒' },
+    ],
+  },
 ]
 
 export default function MainPage() {
