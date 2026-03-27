@@ -158,6 +158,7 @@ function MonitorInner() {
   const [nextRefresh, setNextRefresh]   = useState(intervalSec)
   const [notifyOpen, setNotifyOpen]     = useState(false)
   const [notifySettings, setNotifySettings] = useState({ weekdayMin: 17, weekendMin: 0 })
+  const [notifyThemes, setNotifyThemes] = useState(() => new Set(THEMES.map(t => t.id)))
   const [notifySaving, setNotifySaving] = useState(false)
   const [notifySaved, setNotifySaved]   = useState(false)
   // 슬라이더는 로컬 state로 즉시 반응, URL은 드래그 종료 후 업데이트
@@ -195,10 +196,14 @@ function MonitorInner() {
   useEffect(() => {
     fetch('/api/notify-settings')
       .then(r => r.json())
-      .then(data => setNotifySettings({
-        weekdayMin: Number(data.NOTIFY_WEEKDAY_MIN ?? 17),
-        weekendMin: Number(data.NOTIFY_WEEKEND_MIN ?? 0),
-      }))
+      .then(data => {
+        setNotifySettings({
+          weekdayMin: Number(data.NOTIFY_WEEKDAY_MIN ?? 17),
+          weekendMin: Number(data.NOTIFY_WEEKEND_MIN ?? 0),
+        })
+        const themes = (data.NOTIFY_THEMES ?? 'tutu,ayako,goerok').split(',').map(s => s.trim())
+        setNotifyThemes(new Set(themes))
+      })
       .catch(() => {})
   }, [])
 
@@ -210,6 +215,7 @@ function MonitorInner() {
       body: JSON.stringify({
         NOTIFY_WEEKDAY_MIN: String(notifySettings.weekdayMin),
         NOTIFY_WEEKEND_MIN: String(notifySettings.weekendMin),
+        NOTIFY_THEMES: [...notifyThemes].join(','),
       }),
     })
     setNotifySaving(false)
@@ -333,6 +339,27 @@ function MonitorInner() {
                   <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
                 ))}
               </select>
+            </div>
+            <div className="notify-row">
+              <span className="notify-label">알림 테마</span>
+              <div className="notify-themes">
+                {THEMES.map(t => (
+                  <label key={t.id} className="notify-theme-toggle">
+                    <input
+                      type="checkbox"
+                      checked={notifyThemes.has(t.id)}
+                      onChange={e => {
+                        setNotifyThemes(prev => {
+                          const next = new Set(prev)
+                          e.target.checked ? next.add(t.id) : next.delete(t.id)
+                          return next
+                        })
+                      }}
+                    />
+                    {t.emoji} {t.name}
+                  </label>
+                ))}
+              </div>
             </div>
             <button
               className="notify-save"

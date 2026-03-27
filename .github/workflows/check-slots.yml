@@ -16,4 +16,5 @@ jobs:
           DISCORD_WEBHOOK_URL:  ${{ secrets.DISCORD_WEBHOOK_URL }}
           NOTIFY_WEEKDAY_MIN:   ${{ vars.NOTIFY_WEEKDAY_MIN || '17' }}
           NOTIFY_WEEKEND_MIN:   ${{ vars.NOTIFY_WEEKEND_MIN || '0' }}
+          NOTIFY_THEMES:        ${{ vars.NOTIFY_THEMES || 'tutu,ayako,goerok' }}
         run: node .github/scripts/check-and-notify.mjs

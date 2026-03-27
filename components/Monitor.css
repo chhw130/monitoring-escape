@@ -130,6 +130,26 @@
   padding: 4px 8px;
   cursor: pointer;
 }
+.notify-themes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.notify-theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #ccc;
+  cursor: pointer;
+  user-select: none;
+}
+.notify-theme-toggle input[type="checkbox"] {
+  accent-color: #5b5ef7;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
 .notify-save {
   padding: 6px 18px;
   border-radius: 20px;

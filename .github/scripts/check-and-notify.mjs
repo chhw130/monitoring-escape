@@ -1,5 +1,6 @@
-const SITE_URL    = process.env.SITE_URL
-const DISCORD_URL = process.env.DISCORD_WEBHOOK_URL
+const SITE_URL       = process.env.SITE_URL
+const DISCORD_URL    = process.env.DISCORD_WEBHOOK_URL
+const NOTIFY_THEMES  = new Set((process.env.NOTIFY_THEMES || 'tutu,ayako,goerok').split(',').map(s => s.trim()))
 
 const WEEKDAY_MIN = parseInt(process.env.NOTIFY_WEEKDAY_MIN ?? '17')
 const WEEKEND_MIN = parseInt(process.env.NOTIFY_WEEKEND_MIN ?? '0')
@@ -21,7 +22,7 @@ const data = await res.json()
 
 // 알림 시간대 필터링
 const available = {}
-for (const [themeId, themeData] of Object.entries(data)) {
+for (const [themeId, themeData] of Object.entries(data).filter(([id]) => NOTIFY_THEMES.has(id))) {
   const filtered = {}
   for (const [date, times] of Object.entries(themeData.slots ?? {})) {
     const filteredTimes = times.filter(t => isTimeAllowed(date, t))
