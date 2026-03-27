@@ -1,29 +1,18 @@
 import { memo, useState, useEffect } from 'react'
 
-const THEME_LIST = [
-  { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️' },
-  { id: 'ayako',  name: 'AYAKO',        emoji: '🎭' },
-  { id: 'goerok', name: '괴록',          emoji: '👻' },
-]
-
 const NotifySettings = memo(function NotifySettings() {
   const [open, setOpen]         = useState(false)
   const [settings, setSettings] = useState({ weekdayMin: 17, weekendMin: 0 })
-  const [themes, setThemes]     = useState(() => new Set(THEME_LIST.map(t => t.id)))
   const [saving, setSaving]     = useState(false)
   const [saved, setSaved]       = useState(false)
 
   useEffect(() => {
     fetch('/api/notify-settings')
       .then(r => r.json())
-      .then(data => {
-        setSettings({
-          weekdayMin: Number(data.NOTIFY_WEEKDAY_MIN ?? 17),
-          weekendMin: Number(data.NOTIFY_WEEKEND_MIN ?? 0),
-        })
-        const list = (data.NOTIFY_THEMES ?? 'tutu,ayako,goerok').split(',').map(s => s.trim())
-        setThemes(new Set(list))
-      })
+      .then(data => setSettings({
+        weekdayMin: Number(data.NOTIFY_WEEKDAY_MIN ?? 17),
+        weekendMin: Number(data.NOTIFY_WEEKEND_MIN ?? 0),
+      }))
       .catch(() => {})
   }, [])
 
@@ -35,20 +24,11 @@ const NotifySettings = memo(function NotifySettings() {
       body: JSON.stringify({
         NOTIFY_WEEKDAY_MIN: String(settings.weekdayMin),
         NOTIFY_WEEKEND_MIN: String(settings.weekendMin),
-        NOTIFY_THEMES: [...themes].join(','),
       }),
     })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
-  }
-
-  const toggleTheme = (id, checked) => {
-    setThemes(prev => {
-      const next = new Set(prev)
-      checked ? next.add(id) : next.delete(id)
-      return next
-    })
   }
 
   return (
@@ -82,21 +62,7 @@ const NotifySettings = memo(function NotifySettings() {
               ))}
             </select>
           </div>
-          <div className="notify-row">
-            <span className="notify-label">알림 테마</span>
-            <div className="notify-themes">
-              {THEME_LIST.map(t => (
-                <label key={t.id} className="notify-theme-toggle">
-                  <input
-                    type="checkbox"
-                    checked={themes.has(t.id)}
-                    onChange={e => toggleTheme(t.id, e.target.checked)}
-                  />
-                  {t.emoji} {t.name}
-                </label>
-              ))}
-            </div>
-          </div>
+          <p className="notify-hint">테마별 알림은 각 카드의 🔔 버튼으로 설정하세요</p>
           <button className="notify-save" onClick={handleSave} disabled={saving}>
             {saving ? '저장 중...' : saved ? '✓ 저장됨' : '저장'}
           </button>

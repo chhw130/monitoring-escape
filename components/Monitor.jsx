@@ -1,11 +1,11 @@
 'use client'
 import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import AppHeader     from './monitor/AppHeader'
-import FilterCard    from './monitor/FilterCard'
+import AppHeader      from './monitor/AppHeader'
+import FilterCard     from './monitor/FilterCard'
 import NotifySettings from './monitor/NotifySettings'
-import SummaryBar    from './monitor/SummaryBar'
-import ThemeCard     from './monitor/ThemeCard'
+import SummaryBar     from './monitor/SummaryBar'
+import ThemeCard      from './monitor/ThemeCard'
 import './Monitor.css'
 
 const ALL_THEMES = [
@@ -23,6 +23,7 @@ function MonitorInner({ branchId, branchName }) {
     ALL_THEMES.filter(t => t.branchId === branchId),
     [branchId]
   )
+
   const searchParams = useSearchParams()
   const router       = useRouter()
   const pathname     = usePathname()
@@ -31,13 +32,28 @@ function MonitorInner({ branchId, branchName }) {
   const minHour     = Number(searchParams.get('minHour'))  || DEFAULT_MIN_HOUR
   const maxHour     = Number(searchParams.get('maxHour'))  || DEFAULT_MAX_HOUR
 
-  const [themeData, setThemeData]       = useState({})
-  const [loading, setLoading]           = useState({})
-  const [allLoading, setAllLoading]     = useState(false)
-  const [lastAllCheck, setLastAllCheck] = useState(null)
-  const [nextRefresh, setNextRefresh]   = useState(intervalSec)
+  const [themeData, setThemeData]           = useState({})
+  const [loading, setLoading]               = useState({})
+  const [allLoading, setAllLoading]         = useState(false)
+  const [lastAllCheck, setLastAllCheck]     = useState(null)
+  const [nextRefresh, setNextRefresh]       = useState(intervalSec)
   const [localTimeRange, setLocalTimeRange] = useState([minHour, maxHour])
+  const [notifyThemes, setNotifyThemes]     = useState(() => new Set(THEMES.map(t => t.id)))
   const rangeUpdateTimer = useRef(null)
+  const notifyThemesRef  = useRef(notifyThemes)
+
+  useEffect(() => { notifyThemesRef.current = notifyThemes }, [notifyThemes])
+
+  // 알림 테마 설정 불러오기
+  useEffect(() => {
+    fetch('/api/notify-settings')
+      .then(r => r.json())
+      .then(data => {
+        const list = (data.NOTIFY_THEMES ?? THEMES.map(t => t.id).join(',')).split(',').map(s => s.trim())
+        setNotifyThemes(new Set(list))
+      })
+      .catch(() => {})
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setLocalTimeRange(prev =>
@@ -65,6 +81,19 @@ function MonitorInner({ branchId, branchName }) {
     updateParams({ interval: seconds })
   }, [updateParams])
 
+  // 테마 알림 토글 + 즉시 저장
+  const handleNotifyToggle = useCallback((themeId) => {
+    const prev = notifyThemesRef.current
+    const next = new Set(prev)
+    next.has(themeId) ? next.delete(themeId) : next.add(themeId)
+    setNotifyThemes(next)
+    fetch('/api/notify-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ NOTIFY_THEMES: [...next].join(',') }),
+    }).catch(console.error)
+  }, [])
+
   const fetchTheme = useCallback(async (id) => {
     setLoading(prev => ({ ...prev, [id]: true }))
     try {
@@ -88,12 +117,11 @@ function MonitorInner({ branchId, branchName }) {
       await Promise.all(THEMES.map(t => fetchTheme(t.id)))
     }
     setAllLoading(false)
-  }, [fetchTheme])
+  }, [THEMES, fetchTheme])
 
-  // 테마별 안정적인 onRefresh 콜백 (fetchTheme이 안정적이므로 한 번만 생성)
   const refreshCallbacks = useMemo(() =>
     Object.fromEntries(THEMES.map(t => [t.id, () => fetchTheme(t.id)])),
-    [fetchTheme]
+    [THEMES, fetchTheme]
   )
 
   useEffect(() => {
@@ -155,6 +183,8 @@ function MonitorInner({ branchId, branchName }) {
             loading={loading[theme.id] ?? false}
             onRefresh={refreshCallbacks[theme.id]}
             timeRange={localTimeRange}
+            notifyEnabled={notifyThemes.has(theme.id)}
+            onNotifyToggle={handleNotifyToggle}
           />
         ))}
       </div>

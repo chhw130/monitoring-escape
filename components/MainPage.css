@@ -21,6 +21,32 @@
   color: #666;
 }
 
+.search-wrap {
+  margin-bottom: 28px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  background: #13131f;
+  border: 1px solid #1e1e2e;
+  border-radius: 12px;
+  color: #e2e2ec;
+  font-size: 14px;
+  padding: 10px 16px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.search-input::placeholder { color: #444; }
+.search-input:focus { border-color: #5b5ef755; }
+
+.search-empty {
+  font-size: 14px;
+  color: #555;
+  padding: 20px 0;
+}
+
 .branch-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

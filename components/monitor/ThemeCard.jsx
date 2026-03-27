@@ -7,7 +7,7 @@ function formatDate(dateStr) {
   return { short: `${d.getMonth() + 1}/${d.getDate()}`, dow: WEEKDAYS[d.getDay()] }
 }
 
-const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange }) {
+const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled, onNotifyToggle }) {
   const openReservation = () => window.open(theme.reserveUrl, '_blank')
   const [minHour, maxHour] = timeRange
 
@@ -59,6 +59,13 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
             }} />
             {statusText}
           </span>
+          <button
+            className={`btn-notify${notifyEnabled ? ' active' : ''}`}
+            onClick={() => onNotifyToggle(theme.id)}
+            title={notifyEnabled ? '알림 끄기' : '알림 켜기'}
+          >
+            {notifyEnabled ? '🔔' : '🔕'}
+          </button>
           <button className="btn-refresh" onClick={onRefresh} disabled={loading} title="새로고침">
             {loading ? <span className="spinner" /> : '↻'}
           </button>

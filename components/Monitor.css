@@ -311,6 +311,29 @@
 .btn-refresh:hover    { background: #28283c; color: #fff; }
 .btn-refresh:disabled { opacity: .4; cursor: not-allowed; }
 
+.btn-notify {
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: 1px solid #2e2e3e;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+.btn-notify.active        { opacity: 1; border-color: #5b5ef755; }
+.btn-notify:hover         { background: #28283c; opacity: 1; }
+
+.notify-hint {
+  font-size: 11px;
+  color: #444;
+}
+
 /* ── Stats row ───────────────────────────────── */
 .stats-row {
   display: grid;
