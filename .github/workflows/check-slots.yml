@@ -1,9 +1,7 @@
 name: Check Keyescape Slots
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'    # 5분마다 실행
-  workflow_dispatch:          # 수동 실행 (테스트용)
+  workflow_dispatch:          # cron-job.org에서 트리거
 
 jobs:
   check:
