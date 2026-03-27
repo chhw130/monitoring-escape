@@ -9,7 +9,7 @@ const BRANCHES = [
     id: 'whosthere',
     brand: '키이스케이프',
     name: '후즈데어점',
-    location: '홍대',
+    location: '강남',
     themes: [
       { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️' },
       { id: 'ayako',  name: 'AYAKO',        emoji: '🎭' },
