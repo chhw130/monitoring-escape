@@ -11,17 +11,7 @@ function isTimeAllowed(dateStr, timeStr) {
   return hour >= (isWeekend ? WEEKEND_MIN : WEEKDAY_MIN)
 }
 
-// 슬롯 날짜 기준 openDaysAhead일 전 openHour시 KST에 예약 오픈
-function isBookable(dateStr, openDaysAhead, openHour) {
-  const [year, month, day] = dateStr.split('-').map(Number)
-  const slotDate = new Date(Date.UTC(year, month - 1, day))
-  const openTime = new Date(slotDate)
-  openTime.setUTCDate(openTime.getUTCDate() - openDaysAhead)
-  openTime.setUTCHours(openHour - 9, 0, 0, 0) // KST → UTC
-  return Date.now() >= openTime.getTime()
-}
-
-// 슬롯 조회
+// 슬롯 조회 (lib/keyescape.js에서 isBookable 필터 적용된 결과)
 const res = await fetch(`${SITE_URL}/api/slots/all`)
 if (!res.ok) {
   console.error('API 호출 실패:', res.status)
@@ -29,15 +19,12 @@ if (!res.ok) {
 }
 const data = await res.json()
 
-// 예약 가능 슬롯 필터링
+// 알림 시간대 필터링
 const available = {}
 for (const [themeId, themeData] of Object.entries(data)) {
-  const { slots = {}, openDaysAhead, openHour } = themeData
   const filtered = {}
-  for (const [date, times] of Object.entries(slots)) {
-    const filteredTimes = times.filter(
-      t => isBookable(date, openDaysAhead, openHour) && isTimeAllowed(date, t)
-    )
+  for (const [date, times] of Object.entries(themeData.slots ?? {})) {
+    const filteredTimes = times.filter(t => isTimeAllowed(date, t))
     if (filteredTimes.length > 0) filtered[date] = filteredTimes
   }
   if (Object.keys(filtered).length > 0) available[themeId] = { ...themeData, slots: filtered }
