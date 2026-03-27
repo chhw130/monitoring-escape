@@ -14,6 +14,16 @@ function isTimeAllowed(dateStr, timeStr) {
   return hour >= (isWeekend ? WEEKEND_MIN : WEEKDAY_MIN)
 }
 
+// 슬롯 날짜 기준 6일 전 오전 11시 KST(UTC+9 = UTC 02:00)에 예약 오픈
+function isBookable(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const slotDate = new Date(Date.UTC(year, month - 1, day))
+  const openTime = new Date(slotDate)
+  openTime.setUTCDate(openTime.getUTCDate() - 6)
+  openTime.setUTCHours(2, 0, 0, 0) // 11:00 KST
+  return Date.now() >= openTime.getTime()
+}
+
 const THEME_NAMES = {
   tutu:   '투투 어드벤처 🗺️',
   ayako:  'AYAKO 🎭',
@@ -33,7 +43,7 @@ const available = {}
 for (const [themeId, themeData] of Object.entries(data)) {
   const filtered = {}
   for (const [date, times] of Object.entries(themeData.slots ?? {})) {
-    const filteredTimes = times.filter(t => isTimeAllowed(date, t))
+    const filteredTimes = times.filter(t => isBookable(date) && isTimeAllowed(date, t))
     if (filteredTimes.length > 0) filtered[date] = filteredTimes
   }
   if (Object.keys(filtered).length > 0) available[themeId] = filtered
