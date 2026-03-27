@@ -5,8 +5,28 @@
 }
 
 .main-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 40px;
+  flex-wrap: wrap;
 }
+
+.notify-btn {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 20px;
+  border: 1px solid #5b5ef755;
+  background: #5b5ef715;
+  color: #8b8ef7;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.notify-btn:hover { background: #5b5ef730; }
 
 .main-title {
   font-size: 28px;

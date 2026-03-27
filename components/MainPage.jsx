@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import NotifyModal from './NotifyModal'
 import './MainPage.css'
 
 const BRANCHES = [
@@ -9,13 +10,17 @@ const BRANCHES = [
     brand: '키이스케이프',
     name: '후즈데어점',
     location: '홍대',
-    themeCount: 3,
-    themes: ['투투 어드벤처', 'AYAKO', '괴록'],
+    themes: [
+      { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️' },
+      { id: 'ayako',  name: 'AYAKO',        emoji: '🎭' },
+      { id: 'goerok', name: '괴록',          emoji: '👻' },
+    ],
   },
 ]
 
 export default function MainPage() {
-  const [query, setQuery] = useState('')
+  const [query, setQuery]         = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -24,15 +29,20 @@ export default function MainPage() {
       b.brand.toLowerCase().includes(q) ||
       b.name.toLowerCase().includes(q) ||
       b.location.toLowerCase().includes(q) ||
-      b.themes.some(t => t.toLowerCase().includes(q))
+      b.themes.some(t => t.name.toLowerCase().includes(q))
     )
   }, [query])
 
   return (
     <div className="main-page">
       <header className="main-header">
-        <h1 className="main-title">방탈출 예약 모니터</h1>
-        <p className="main-sub">실시간 예약 가능 현황을 확인하세요</p>
+        <div>
+          <h1 className="main-title">방탈출 예약 모니터</h1>
+          <p className="main-sub">실시간 예약 가능 현황을 확인하세요</p>
+        </div>
+        <button className="notify-btn" onClick={() => setModalOpen(true)}>
+          🔔 알림 설정
+        </button>
       </header>
 
       <div className="search-wrap">
@@ -58,16 +68,20 @@ export default function MainPage() {
               <h2 className="branch-name">{branch.name}</h2>
               <ul className="branch-themes">
                 {branch.themes.map(t => (
-                  <li key={t} className="branch-theme-item">{t}</li>
+                  <li key={t.id} className="branch-theme-item">{t.emoji} {t.name}</li>
                 ))}
               </ul>
               <div className="branch-card-footer">
-                <span className="branch-theme-count">{branch.themeCount}개 테마</span>
+                <span className="branch-theme-count">{branch.themes.length}개 테마</span>
                 <span className="branch-cta">모니터링 보기 →</span>
               </div>
             </Link>
           ))}
         </div>
+      )}
+
+      {modalOpen && (
+        <NotifyModal branches={BRANCHES} onClose={() => setModalOpen(false)} />
       )}
     </div>
   )
