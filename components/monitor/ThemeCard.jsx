@@ -66,7 +66,7 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
           >
             {notifyEnabled ? '🔔' : '🔕'}
           </button>
-          <button className="btn-refresh" onClick={onRefresh} disabled={loading} title="새로고침">
+          <button className="btn-refresh" onClick={onRefresh} disabled={loading || !notifyEnabled} title={notifyEnabled ? '새로고침' : '알림을 켜야 조회할 수 있습니다'}>
             {loading ? <span className="spinner" /> : '↻'}
           </button>
         </div>
@@ -95,7 +95,7 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
 
       <div className="slot-area">
         {slots === null ? (
-          <div className="empty-state">새로고침을 눌러 확인하세요</div>
+          <div className="empty-state">{notifyEnabled ? '새로고침을 눌러 확인하세요' : '🔕 알림을 켜면 자동으로 조회됩니다'}</div>
         ) : entries.length === 0 ? (
           <div className="empty-state">😢 현재 예약 가능한 시간이 없습니다</div>
         ) : (
