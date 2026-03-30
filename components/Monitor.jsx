@@ -28,10 +28,9 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
   const [nextRefresh, setNextRefresh]       = useState(intervalSec)
   const [localTimeRange, setLocalTimeRange] = useState([minHour, maxHour])
   const [notifyThemes, setNotifyThemes]     = useState(() => new Set(THEMES.map(t => t.id)))
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
   const rangeUpdateTimer = useRef(null)
-  const notifyThemesRef  = useRef(notifyThemes)
-
-  useEffect(() => { notifyThemesRef.current = notifyThemes }, [notifyThemes])
+  const notifyThemesRef  = useRef(new Set())
 
   // 알림 테마 설정 불러오기
   useEffect(() => {
@@ -39,9 +38,14 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
       .then(r => r.json())
       .then(data => {
         const list = (data.NOTIFY_THEMES ?? THEMES.map(t => t.id).join(',')).split(',').map(s => s.trim())
-        setNotifyThemes(new Set(list))
+        const next = new Set(list)
+        notifyThemesRef.current = next
+        setNotifyThemes(next)
       })
-      .catch(() => {})
+      .catch(() => {
+        notifyThemesRef.current = new Set(THEMES.map(t => t.id))
+      })
+      .finally(() => setSettingsLoaded(true))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -75,6 +79,7 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
     const prev = notifyThemesRef.current
     const next = new Set(prev)
     next.has(themeId) ? next.delete(themeId) : next.add(themeId)
+    notifyThemesRef.current = next
     setNotifyThemes(next)
     fetch('/api/notify-settings', {
       method: 'POST',
@@ -110,11 +115,12 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
   )
 
   useEffect(() => {
+    if (!settingsLoaded) return
     fetchAll()
     setNextRefresh(intervalSec)
     const timer = setInterval(fetchAll, intervalSec * 1000)
     return () => clearInterval(timer)
-  }, [fetchAll, intervalSec])
+  }, [fetchAll, intervalSec, settingsLoaded])
 
   useEffect(() => {
     const tick = setInterval(() => {
