@@ -1,22 +1,40 @@
-import { ALL_FETCHERS, ALL_THEMES } from '@/lib/registry'
+import { THEME_FETCHER, ALL_THEMES } from '@/lib/registry'
 import { setCached } from '@/lib/slotCache'
 
 export const maxDuration = 30  // Vercel 최대 실행 시간 30초
 
+async function getEnabledThemeIds() {
+  const token = process.env.GH_PAT
+  const repo  = process.env.GH_REPO
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${repo}/actions/variables/NOTIFY_THEMES`,
+      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } }
+    )
+    if (res.ok) {
+      const data = await res.json()
+      return data.value.split(',').map(s => s.trim()).filter(Boolean)
+    }
+  } catch {}
+  return ALL_THEMES.map(t => t.id)  // fallback: 전체 테마
+}
+
 export async function GET() {
   try {
-    const results = await Promise.all(ALL_FETCHERS.map(f => f()))
-    const merged  = Object.assign({}, ...results)
+    const enabledIds    = await getEnabledThemeIds()
+    const enabledThemes = ALL_THEMES.filter(t => enabledIds.includes(t.id))
 
-    // 테마별로 캐시 갱신 → 이후 브라우저의 /api/slots/[id] 요청은 캐시 히트
-    for (const theme of ALL_THEMES) {
-      if (merged[theme.id]) {
-        setCached(theme.id, {
-          theme_id:   theme.id,
-          slots:      merged[theme.id].slots,
-          checked_at: merged[theme.id].checked_at,
-        })
-      }
+    const results = await Promise.all(
+      enabledThemes.map(async (theme) => {
+        const slots = await THEME_FETCHER[theme.id](theme.id)
+        return [theme.id, { slots, checked_at: new Date().toISOString() }]
+      })
+    )
+
+    const merged = Object.fromEntries(results)
+
+    for (const [id, data] of Object.entries(merged)) {
+      setCached(id, { theme_id: id, ...data })
     }
 
     return Response.json(merged)

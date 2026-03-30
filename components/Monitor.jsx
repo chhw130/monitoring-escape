@@ -96,8 +96,10 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
   }, [])
 
   const fetchAll = useCallback(async () => {
+    const enabledThemes = THEMES.filter(t => notifyThemesRef.current.has(t.id))
+    if (enabledThemes.length === 0) return
     setAllLoading(true)
-    await Promise.all(THEMES.map(t => fetchTheme(t.id)))
+    await Promise.all(enabledThemes.map(t => fetchTheme(t.id)))
     setLastAllCheck(new Date())
     setAllLoading(false)
   }, [THEMES, fetchTheme])
