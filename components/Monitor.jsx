@@ -37,10 +37,22 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
     fetch('/api/notify-settings')
       .then(r => r.json())
       .then(data => {
-        const disabled = new Set(
-          (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
-        )
-        const next = new Set(THEMES.map(t => t.id).filter(id => !disabled.has(id)))
+        const allIds = THEMES.map(t => t.id)
+        const disabledList = (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        let next
+
+        if (disabledList.length > 0) {
+          // 신규: NOTIFY_DISABLED_THEMES 기반 (꺼진 목록)
+          const disabled = new Set(disabledList)
+          next = new Set(allIds.filter(id => !disabled.has(id)))
+        } else if (data.NOTIFY_THEMES) {
+          // 마이그레이션: 기존 NOTIFY_THEMES(켜진 목록) 기반으로 상태 복원
+          const oldEnabled = new Set(data.NOTIFY_THEMES.split(',').map(s => s.trim()).filter(Boolean))
+          next = new Set(allIds.filter(id => oldEnabled.has(id)))
+        } else {
+          next = new Set(allIds)
+        }
+
         notifyThemesRef.current = next
         setNotifyThemes(next)
       })

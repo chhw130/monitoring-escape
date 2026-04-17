@@ -62,11 +62,19 @@ export default function NotifyModal({ branches, onClose }) {
       .then(r => r.json())
       .then(data => {
         setDayMin(parseDayMin(data.NOTIFY_DAY_MIN ?? ''))
-        const disabled = new Set(
-          (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
-        )
-        const all = branches.flatMap(b => b.themes.map(t => t.id))
-        setNotifyThemes(new Set(all.filter(id => !disabled.has(id))))
+        const allIds = branches.flatMap(b => b.themes.map(t => t.id))
+        const disabledList = (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        let enabledSet
+        if (disabledList.length > 0) {
+          const disabled = new Set(disabledList)
+          enabledSet = new Set(allIds.filter(id => !disabled.has(id)))
+        } else if (data.NOTIFY_THEMES) {
+          const oldEnabled = new Set(data.NOTIFY_THEMES.split(',').map(s => s.trim()).filter(Boolean))
+          enabledSet = new Set(allIds.filter(id => oldEnabled.has(id)))
+        } else {
+          enabledSet = new Set(allIds)
+        }
+        setNotifyThemes(enabledSet)
         try {
           const parsed = JSON.parse(data.NOTIFY_THEME_SETTINGS ?? '{}')
           // dayMin 배열 검증
