@@ -37,8 +37,10 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
     fetch('/api/notify-settings')
       .then(r => r.json())
       .then(data => {
-        const list = (data.NOTIFY_THEMES ?? THEMES.map(t => t.id).join(',')).split(',').map(s => s.trim())
-        const next = new Set(list)
+        const disabled = new Set(
+          (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        )
+        const next = new Set(THEMES.map(t => t.id).filter(id => !disabled.has(id)))
         notifyThemesRef.current = next
         setNotifyThemes(next)
       })
@@ -81,12 +83,16 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
     next.has(themeId) ? next.delete(themeId) : next.add(themeId)
     notifyThemesRef.current = next
     setNotifyThemes(next)
+    const disabled = THEMES.map(t => t.id).filter(id => !next.has(id))
     fetch('/api/notify-settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ NOTIFY_THEMES: [...next].join(',') }),
+      body: JSON.stringify({
+        NOTIFY_DISABLED_THEMES: disabled.join(','),
+        NOTIFY_THEMES: [...next].join(','),
+      }),
     }).catch(console.error)
-  }, [])
+  }, [THEMES])
 
   const fetchTheme = useCallback(async (id) => {
     setLoading(prev => ({ ...prev, [id]: true }))

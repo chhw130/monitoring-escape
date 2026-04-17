@@ -9,8 +9,8 @@ const GH_HEADERS = {
   'Content-Type': 'application/json',
 }
 
-const VARIABLE_NAMES = ['NOTIFY_DAY_MIN', 'NOTIFY_THEMES', 'NOTIFY_THEME_SETTINGS']
-const DEFAULTS = { NOTIFY_DAY_MIN: '0,17,17,17,17,17,0', NOTIFY_THEMES: 'tutu,ayako,goerok', NOTIFY_THEME_SETTINGS: '{}' }
+const VARIABLE_NAMES = ['NOTIFY_DAY_MIN', 'NOTIFY_THEMES', 'NOTIFY_THEME_SETTINGS', 'NOTIFY_DISABLED_THEMES']
+const DEFAULTS = { NOTIFY_DAY_MIN: '0,17,17,17,17,17,0', NOTIFY_THEMES: 'tutu,ayako,goerok', NOTIFY_THEME_SETTINGS: '{}', NOTIFY_DISABLED_THEMES: '' }
 
 export async function GET() {
   const result = { ...DEFAULTS }
