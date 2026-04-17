@@ -8,12 +8,9 @@ function formatDate(dateStr) {
 }
 
 const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled, onNotifyToggle }) {
-  const openReservation = (dateStr) => {
+  const getDateUrl = (dateStr) => {
     const base = theme.reserveUrl
-    const url = dateStr
-      ? base + (base.includes('?') ? '&' : '?') + 'date=' + dateStr
-      : base
-    window.open(url, '_blank')
+    return base + (base.includes('?') ? '&' : '?') + 'date=' + dateStr
   }
   const [minHour, maxHour] = timeRange
 
@@ -109,19 +106,27 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
             {entries.map(([dateStr, times]) => {
               const { short, dow } = formatDate(dateStr)
               return (
-                <li key={dateStr} className="slot-row slot-row-link" onClick={() => openReservation(dateStr)} title="클릭하면 예약 페이지로 이동">
-                  <div className="slot-date">
-                    <span className="date-main">{short}</span>
-                    <span className="date-dow">{dow}</span>
-                  </div>
-                  <div className="time-chips">
-                    {times.map(t => {
-                      const hour = parseInt(t.split(':')[0], 10)
-                      const colorClass = hour < 12 ? 'chip-blue' : hour < 18 ? 'chip-yellow' : 'chip-green'
-                      return <span key={t} className={`chip ${colorClass}`}>{t}</span>
-                    })}
-                  </div>
-                  <span className="row-arrow">→</span>
+                <li key={dateStr} className="slot-row">
+                  <a
+                    href={getDateUrl(dateStr)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="slot-row-link"
+                    title="클릭하면 예약 페이지로 이동"
+                  >
+                    <div className="slot-date">
+                      <span className="date-main">{short}</span>
+                      <span className="date-dow">{dow}</span>
+                    </div>
+                    <div className="time-chips">
+                      {times.map(t => {
+                        const hour = parseInt(t.split(':')[0], 10)
+                        const colorClass = hour < 12 ? 'chip-blue' : hour < 18 ? 'chip-yellow' : 'chip-green'
+                        return <span key={t} className={`chip ${colorClass}`}>{t}</span>
+                      })}
+                    </div>
+                    <span className="row-arrow">→</span>
+                  </a>
                 </li>
               )
             })}

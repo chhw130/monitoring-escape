@@ -359,20 +359,21 @@
 }
 .slot-list { list-style: none; }
 .slot-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
   border-bottom: 1px solid #1e1e2c;
 }
 .slot-row:last-child { border-bottom: none; }
 
 .slot-row-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 6px;
+  width: 100%;
   cursor: pointer;
   border-radius: 8px;
   transition: background .15s;
-  padding-left: 6px;
-  padding-right: 6px;
+  text-decoration: none;
+  color: inherit;
   margin-left: -6px;
   margin-right: -6px;
 }
