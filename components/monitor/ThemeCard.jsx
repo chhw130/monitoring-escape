@@ -8,7 +8,13 @@ function formatDate(dateStr) {
 }
 
 const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled, onNotifyToggle }) {
-  const openReservation = () => window.open(theme.reserveUrl, '_blank')
+  const openReservation = (dateStr) => {
+    const base = theme.reserveUrl
+    const url = dateStr
+      ? base + (base.includes('?') ? '&' : '?') + 'date=' + dateStr
+      : base
+    window.open(url, '_blank')
+  }
   const [minHour, maxHour] = timeRange
 
   const slots     = data?.slots ?? null
@@ -103,7 +109,7 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
             {entries.map(([dateStr, times]) => {
               const { short, dow } = formatDate(dateStr)
               return (
-                <li key={dateStr} className="slot-row slot-row-link" onClick={openReservation} title="클릭하면 예약 페이지로 이동">
+                <li key={dateStr} className="slot-row slot-row-link" onClick={() => openReservation(dateStr)} title="클릭하면 예약 페이지로 이동">
                   <div className="slot-date">
                     <span className="date-main">{short}</span>
                     <span className="date-dow">{dow}</span>
