@@ -62,9 +62,11 @@ export default function NotifyModal({ branches, onClose }) {
       .then(r => r.json())
       .then(data => {
         setDayMin(parseDayMin(data.NOTIFY_DAY_MIN ?? ''))
-        const savedThemes = (data.NOTIFY_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        const disabled = new Set(
+          (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        )
         const all = branches.flatMap(b => b.themes.map(t => t.id))
-        setNotifyThemes(new Set(savedThemes.length ? savedThemes : all))
+        setNotifyThemes(new Set(all.filter(id => !disabled.has(id))))
         try {
           const parsed = JSON.parse(data.NOTIFY_THEME_SETTINGS ?? '{}')
           // dayMin 배열 검증
@@ -135,9 +137,10 @@ export default function NotifyModal({ branches, onClose }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        NOTIFY_DAY_MIN:       dayMin.join(','),
-        NOTIFY_THEMES:        [...notifyThemes].join(','),
-        NOTIFY_THEME_SETTINGS: JSON.stringify(filteredSettings),
+        NOTIFY_DAY_MIN:           dayMin.join(','),
+        NOTIFY_THEMES:            [...notifyThemes].join(','),
+        NOTIFY_DISABLED_THEMES:   branches.flatMap(b => b.themes.map(t => t.id)).filter(id => !notifyThemes.has(id)).join(','),
+        NOTIFY_THEME_SETTINGS:    JSON.stringify(filteredSettings),
       }),
     }).catch(console.error)
     setSaving(false)

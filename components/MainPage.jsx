@@ -39,6 +39,26 @@ const BRANCHES = [
       { id: 'frank-7', name: 'Plan to save my dear',  emoji: '🎒' },
     ],
   },
+  {
+    id: 'play33-konkuk',
+    brand: 'play33',
+    name: '건대점',
+    location: '건대',
+    themes: [
+      { id: 'play33-dial',    name: '다이얼', emoji: '☎️' },
+      { id: 'play33-witness', name: '목격자', emoji: '👁️' },
+      { id: 'play33-thatday', name: '그 날',  emoji: '🗓️' },
+    ],
+  },
+  {
+    id: 'play33-hongdae',
+    brand: 'play33',
+    name: '홍대점',
+    location: '홍대',
+    themes: [
+      { id: 'play33-pian', name: '피안화', emoji: '🌸' },
+    ],
+  },
 ]
 
 export default function MainPage() {
