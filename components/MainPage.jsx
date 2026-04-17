@@ -59,6 +59,15 @@ const BRANCHES = [
       { id: 'play33-pian', name: '피안화', emoji: '🌸' },
     ],
   },
+  {
+    id: 'seoulscape-hongdae',
+    brand: '서울이스케이프룸',
+    name: '홍대점',
+    location: '홍대',
+    themes: [
+      { id: 'seoulscape-osiris', name: '오시리스', emoji: '🏺' },
+    ],
+  },
 ]
 
 export default function MainPage() {
