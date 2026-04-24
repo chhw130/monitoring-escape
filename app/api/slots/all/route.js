@@ -27,7 +27,16 @@ export async function GET() {
     const results = await Promise.all(
       enabledThemes.map(async (theme) => {
         const slots = await THEME_FETCHER[theme.id](theme.id)
-        return [theme.id, { slots, checked_at: new Date().toISOString() }]
+        return [theme.id, {
+          slots,
+          checked_at:   new Date().toISOString(),
+          name:         theme.name,
+          emoji:        theme.emoji,
+          branch:       theme.branch,
+          openDaysAhead: theme.openDaysAhead,
+          openHour:     theme.openHour,
+          reserveUrl:   theme.reserveUrl,
+        }]
       })
     )
 
