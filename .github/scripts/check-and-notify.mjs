@@ -13,6 +13,7 @@ function isTimeAllowed(dateStr, timeStr, themeId) {
   const dow     = new Date(dateStr + 'T00:00:00').getDay()
   const hour    = parseInt(timeStr.split(':')[0])
   const dayMin  = THEME_SETTINGS[themeId]?.dayMin ?? DAY_MIN
+  if (dayMin[dow] === -1) return false
   return hour >= dayMin[dow]
 }
 

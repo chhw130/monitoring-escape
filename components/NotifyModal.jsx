@@ -20,6 +20,7 @@ const HourSelect = ({ value, onChange, compact }) => (
     value={value}
     onChange={e => onChange(Number(e.target.value))}
   >
+    <option value={-1}>없음</option>
     {Array.from({ length: 25 }, (_, i) => (
       <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
     ))}
