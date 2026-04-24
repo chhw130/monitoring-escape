@@ -26,26 +26,6 @@ const HourSelect = ({ value, onChange, compact }) => (
   </select>
 )
 
-const DayGrid = ({ dayMin, setDay, setBatch, compact }) => (
-  <>
-    {!compact && (
-      <div className="modal-batch-row">
-        <span className="modal-label">평일 일괄</span>
-        <HourSelect value={dayMin[1]} onChange={v => setBatch(WEEKDAY_IDX, v)} />
-        <span className="modal-label modal-label-gap">주말 일괄</span>
-        <HourSelect value={dayMin[0]} onChange={v => setBatch(WEEKEND_IDX, v)} />
-      </div>
-    )}
-    <div className="modal-day-grid">
-      {DAYS.map((label, idx) => (
-        <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
-          <span className="modal-day-label">{label}</span>
-          <HourSelect compact value={dayMin[idx]} onChange={v => setDay(idx, v)} />
-        </div>
-      ))}
-    </div>
-  </>
-)
 
 export default function NotifyModal({ branches, onClose }) {
   const [dayMin, setDayMin]               = useState(DEFAULT_DAY_MIN)
@@ -89,12 +69,8 @@ export default function NotifyModal({ branches, onClose }) {
       .catch(() => {})
   }, [branches])
 
-  const setGlobalDay = useCallback((idx, val) => {
-    setDayMin(prev => prev.map((v, i) => i === idx ? val : v))
-  }, [])
-
-  const setGlobalBatch = useCallback((indices, val) => {
-    setDayMin(prev => prev.map((v, i) => indices.includes(i) ? val : v))
+  const disableAll = useCallback(() => {
+    setNotifyThemes(new Set())
   }, [])
 
   const toggleTheme = useCallback((id) => {
@@ -170,16 +146,10 @@ export default function NotifyModal({ branches, onClose }) {
 
         <div className="modal-body">
           <section className="modal-section">
-            <h3 className="modal-section-title">기본 알림 시간 (전체 적용)</h3>
-            <DayGrid
-              dayMin={dayMin}
-              setDay={setGlobalDay}
-              setBatch={setGlobalBatch}
-            />
-          </section>
-
-          <section className="modal-section">
-            <h3 className="modal-section-title">알림 테마</h3>
+            <div className="modal-section-header">
+              <h3 className="modal-section-title">알림 테마</h3>
+              <button className="modal-disable-all-btn" onClick={disableAll}>모든 알람 해제</button>
+            </div>
             {branches.map(branch => {
               const ids = branch.themes.map(t => t.id)
               const allChecked = ids.every(id => notifyThemes.has(id))

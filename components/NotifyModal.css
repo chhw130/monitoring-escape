@@ -58,6 +58,12 @@
 
 .modal-section { display: flex; flex-direction: column; gap: 12px; }
 
+.modal-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .modal-section-title {
   font-size: 12px;
   font-weight: 600;
@@ -170,6 +176,19 @@
   align-items: center;
   justify-content: space-between;
 }
+
+.modal-disable-all-btn {
+  background: none;
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  color: #666;
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.modal-disable-all-btn:hover { border-color: #c0392b55; color: #e74c3c; }
 
 .modal-custom-btn {
   background: none;
