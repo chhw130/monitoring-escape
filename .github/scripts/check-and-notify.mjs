@@ -17,8 +17,12 @@ function isTimeAllowed(dateStr, timeStr, themeId) {
   return hour >= dayMin[dow]
 }
 
-// 슬롯 조회 (lib/keyescape.js에서 isBookable 필터 적용된 결과)
-const res = await fetch(`${SITE_URL}/api/slots/all`)
+// 슬롯 조회 (없음 요일은 서버에서 fetch 자체를 건너뜀)
+const params = new URLSearchParams({
+  dayMin: process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0',
+  themeSettings: process.env.NOTIFY_THEME_SETTINGS || '{}',
+})
+const res = await fetch(`${SITE_URL}/api/slots/all?${params}`)
 if (!res.ok) {
   console.error('API 호출 실패:', res.status)
   process.exit(1)

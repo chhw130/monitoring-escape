@@ -19,14 +19,25 @@ async function getEnabledThemeIds() {
   return ALL_THEMES.map(t => t.id)  // fallback: 전체 테마
 }
 
-export async function GET() {
+function getSkipDows(dayMin) {
+  return new Set(dayMin.reduce((acc, v, i) => { if (v === -1) acc.push(i); return acc }, []))
+}
+
+export async function GET(req) {
   try {
+    const { searchParams } = new URL(req.url)
+    const dayMin         = (searchParams.get('dayMin') || '0,17,17,17,17,17,0').split(',').map(Number)
+    const themeSettings  = JSON.parse(searchParams.get('themeSettings') || '{}')
+    const globalSkipDows = getSkipDows(dayMin)
+
     const enabledIds    = await getEnabledThemeIds()
     const enabledThemes = ALL_THEMES.filter(t => enabledIds.includes(t.id))
 
     const results = await Promise.all(
       enabledThemes.map(async (theme) => {
-        const slots = await THEME_FETCHER[theme.id](theme.id)
+        const themeDayMin = themeSettings[theme.id]?.dayMin
+        const skipDows    = themeDayMin ? getSkipDows(themeDayMin) : globalSkipDows
+        const slots = await THEME_FETCHER[theme.id](theme.id, skipDows)
         return [theme.id, {
           slots,
           checked_at:   new Date().toISOString(),
