@@ -18,6 +18,7 @@ export default async function BranchPage({ params }: Props) {
   return (
     <Monitor
       branchId={branch.id}
+      brand={branch.brand}
       branchName={`${branch.brand} ${branch.name}`}
       themes={themes}
     />

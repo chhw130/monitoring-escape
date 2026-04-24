@@ -47,6 +47,28 @@
 }
 .countdown { color: #444; }
 
+.header-btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-notify-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: transparent;
+  color: #8b8ef7;
+  border: 1px solid #5b5ef755;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.btn-notify-open:hover { background: #5b5ef711; border-color: #5b5ef7aa; }
+
 .btn-all {
   display: inline-flex;
   align-items: center;

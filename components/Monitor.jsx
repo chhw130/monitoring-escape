@@ -5,30 +5,30 @@ import AppHeader from './monitor/AppHeader'
 import FilterCard from './monitor/FilterCard'
 import SummaryBar from './monitor/SummaryBar'
 import ThemeCard  from './monitor/ThemeCard'
+import NotifyModal from './NotifyModal'
 import './Monitor.css'
 
-const DEFAULT_INTERVAL = 180
+const POLL_INTERVAL = 240  // 크론 주기와 동일 (4분)
 const DEFAULT_MIN_HOUR = 7
 const DEFAULT_MAX_HOUR = 24
 
-function MonitorInner({ branchId, branchName, themes: THEMES }) {
+function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
 
   const searchParams = useSearchParams()
   const router       = useRouter()
   const pathname     = usePathname()
 
-  const intervalSec = Number(searchParams.get('interval')) || DEFAULT_INTERVAL
-  const minHour     = Number(searchParams.get('minHour'))  || DEFAULT_MIN_HOUR
-  const maxHour     = Number(searchParams.get('maxHour'))  || DEFAULT_MAX_HOUR
+  const minHour = Number(searchParams.get('minHour')) || DEFAULT_MIN_HOUR
+  const maxHour = Number(searchParams.get('maxHour')) || DEFAULT_MAX_HOUR
 
   const [themeData, setThemeData]           = useState({})
   const [loading, setLoading]               = useState({})
   const [allLoading, setAllLoading]         = useState(false)
   const [lastAllCheck, setLastAllCheck]     = useState(null)
-  const [nextRefresh, setNextRefresh]       = useState(intervalSec)
   const [localTimeRange, setLocalTimeRange] = useState([minHour, maxHour])
   const [notifyThemes, setNotifyThemes]     = useState(() => new Set(THEMES.map(t => t.id)))
   const [settingsLoaded, setSettingsLoaded] = useState(false)
+  const [modalOpen, setModalOpen]           = useState(false)
   const rangeUpdateTimer = useRef(null)
   const notifyThemesRef  = useRef(new Set())
 
@@ -42,11 +42,9 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
         let next
 
         if (disabledList.length > 0) {
-          // 신규: NOTIFY_DISABLED_THEMES 기반 (꺼진 목록)
           const disabled = new Set(disabledList)
           next = new Set(allIds.filter(id => !disabled.has(id)))
         } else if (data.NOTIFY_THEMES) {
-          // 마이그레이션: 기존 NOTIFY_THEMES(켜진 목록) 기반으로 상태 복원
           const oldEnabled = new Set(data.NOTIFY_THEMES.split(',').map(s => s.trim()).filter(Boolean))
           next = new Set(allIds.filter(id => oldEnabled.has(id)))
         } else {
@@ -83,10 +81,6 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
   const handleReset = useCallback(() => {
     router.replace(pathname, { scroll: false })
   }, [router, pathname])
-
-  const handleIntervalChange = useCallback((seconds) => {
-    updateParams({ interval: seconds })
-  }, [updateParams])
 
   // 테마 알림 토글 + 즉시 저장
   const handleNotifyToggle = useCallback((themeId) => {
@@ -135,17 +129,9 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
   useEffect(() => {
     if (!settingsLoaded) return
     fetchAll()
-    setNextRefresh(intervalSec)
-    const timer = setInterval(fetchAll, intervalSec * 1000)
+    const timer = setInterval(fetchAll, POLL_INTERVAL * 1000)
     return () => clearInterval(timer)
-  }, [fetchAll, intervalSec, settingsLoaded])
-
-  useEffect(() => {
-    const tick = setInterval(() => {
-      setNextRefresh(prev => (prev <= 1 ? intervalSec : prev - 1))
-    }, 1000)
-    return () => clearInterval(tick)
-  }, [intervalSec])
+  }, [fetchAll, settingsLoaded])
 
   const totalDates = useMemo(() =>
     Object.values(themeData).reduce((sum, d) => sum + Object.keys(d?.slots ?? {}).length, 0),
@@ -153,15 +139,27 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
   )
 
   const isDefault = useMemo(() =>
-    intervalSec === DEFAULT_INTERVAL &&
-    localTimeRange[0] === DEFAULT_MIN_HOUR &&
-    localTimeRange[1] === DEFAULT_MAX_HOUR,
-    [intervalSec, localTimeRange]
+    localTimeRange[0] === DEFAULT_MIN_HOUR && localTimeRange[1] === DEFAULT_MAX_HOUR,
+    [localTimeRange]
   )
+
+  const notifyBranches = useMemo(() => [{
+    id: branchId,
+    brand: brand ?? '',
+    name: branchName,
+    themes: THEMES.map(t => ({ id: t.id, name: t.name, emoji: t.emoji })),
+  }], [branchId, brand, branchName, THEMES])
 
   return (
     <div className="app">
-      <AppHeader onRefreshAll={fetchAll} loading={allLoading} lastAllCheck={lastAllCheck} branchName={branchName} themeCount={THEMES.length} />
+      <AppHeader
+        onRefreshAll={fetchAll}
+        loading={allLoading}
+        lastAllCheck={lastAllCheck}
+        branchName={branchName}
+        themeCount={THEMES.length}
+        onNotifyOpen={() => setModalOpen(true)}
+      />
 
       <div className="legend-bar">
         <span className="chip chip-blue">~12시</span>
@@ -173,10 +171,6 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
 
       <SummaryBar
         totalDates={totalDates}
-        intervalSec={intervalSec}
-        nextRefresh={nextRefresh}
-        lastAllCheck={lastAllCheck}
-        onIntervalChange={handleIntervalChange}
         onReset={handleReset}
         isDefault={isDefault}
       />
@@ -195,14 +189,18 @@ function MonitorInner({ branchId, branchName, themes: THEMES }) {
           />
         ))}
       </div>
+
+      {modalOpen && (
+        <NotifyModal branches={notifyBranches} onClose={() => setModalOpen(false)} />
+      )}
     </div>
   )
 }
 
-export default function Monitor({ branchId, branchName, themes }) {
+export default function Monitor({ branchId, brand, branchName, themes }) {
   return (
     <Suspense>
-      <MonitorInner branchId={branchId} branchName={branchName} themes={themes} />
+      <MonitorInner branchId={branchId} brand={brand} branchName={branchName} themes={themes} />
     </Suspense>
   )
 }

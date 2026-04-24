@@ -1,15 +1,6 @@
 import { memo } from 'react'
 
-const INTERVALS = [
-  { label: '1분', seconds: 60 },
-  { label: '3분', seconds: 180 },
-  { label: '5분', seconds: 300 },
-]
-
-const SummaryBar = memo(function SummaryBar({
-  totalDates, intervalSec, nextRefresh, lastAllCheck,
-  onIntervalChange, onReset, isDefault,
-}) {
+const SummaryBar = memo(function SummaryBar({ totalDates, onReset, isDefault }) {
   return (
     <div className="summary-bar">
       <span>
@@ -19,17 +10,7 @@ const SummaryBar = memo(function SummaryBar({
         </strong>
       </span>
       <div className="interval-group">
-        <span className="interval-label">⏱ 갱신 주기</span>
-        {INTERVALS.map(({ label, seconds }) => (
-          <button
-            key={seconds}
-            className={`interval-btn${intervalSec === seconds ? ' active' : ''}`}
-            onClick={() => onIntervalChange(seconds)}
-          >
-            {label}
-          </button>
-        ))}
-        {lastAllCheck && <span className="countdown">{nextRefresh}초 후</span>}
+        <span className="interval-label">⏱ 4분마다 갱신 중</span>
         <button
           className={`btn-reset${isDefault ? ' btn-reset-disabled' : ''}`}
           onClick={onReset}
