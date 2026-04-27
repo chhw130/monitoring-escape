@@ -46,7 +46,7 @@ if (Object.keys(available).length === 0) {
 }
 
 // Discord 메시지 생성
-let message = '🔔 **키이스케이프 예약 가능!**\n\n'
+let message = '🔔 **방탈출 예약 가능!**\n\n'
 for (const [, themeData] of Object.entries(available)) {
   const { name, emoji, branch, openDaysAhead, openHour, slots, reserveUrl } = themeData
   const openInfo = (openDaysAhead != null && openHour != null)
