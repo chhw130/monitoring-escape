@@ -3,20 +3,20 @@ import { setCached } from '@/lib/slotCache'
 
 export const maxDuration = 30  // Vercel 최대 실행 시간 30초
 
-async function getDisabledThemeIds() {
+async function getEnabledThemeIds() {
   const token = process.env.GH_PAT
   const repo  = process.env.GH_REPO
   try {
     const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/variables/NOTIFY_DISABLED_THEMES`,
+      `https://api.github.com/repos/${repo}/actions/variables/NOTIFY_THEMES`,
       { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } }
     )
     if (res.ok) {
       const data = await res.json()
-      return new Set(data.value.split(',').map(s => s.trim()).filter(Boolean))
+      return data.value.split(',').map(s => s.trim()).filter(Boolean)
     }
   } catch {}
-  return new Set()
+  return []
 }
 
 function getSkipDows(dayMin) {
@@ -30,8 +30,10 @@ export async function GET(req) {
     const themeSettings  = JSON.parse(searchParams.get('themeSettings') || '{}')
     const globalSkipDows = getSkipDows(dayMin)
 
-    const disabledIds   = await getDisabledThemeIds()
-    const enabledThemes = ALL_THEMES.filter(t => !disabledIds.has(t.id))
+    const enabledIds    = await getEnabledThemeIds()
+    const enabledThemes = enabledIds.length > 0
+      ? ALL_THEMES.filter(t => enabledIds.includes(t.id))
+      : []
 
     const results = await Promise.all(
       enabledThemes.map(async (theme) => {
