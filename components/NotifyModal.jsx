@@ -35,6 +35,7 @@ export default function NotifyModal({ branches, onClose }) {
   const [themeSettings, setThemeSettings] = useState({})
   // 커스텀 패널이 열린 테마 ID Set
   const [openCustom, setOpenCustom]       = useState(new Set())
+  const [openBranches, setOpenBranches]   = useState(new Set())
   const [saving, setSaving]               = useState(false)
   const [saved, setSaved]                 = useState(false)
 
@@ -69,6 +70,14 @@ export default function NotifyModal({ branches, onClose }) {
       })
       .catch(() => {})
   }, [branches])
+
+  const toggleBranch = useCallback((branchId) => {
+    setOpenBranches(prev => {
+      const next = new Set(prev)
+      next.has(branchId) ? next.delete(branchId) : next.add(branchId)
+      return next
+    })
+  }, [])
 
   const disableAll = useCallback(() => {
     setNotifyThemes(new Set())
@@ -154,11 +163,21 @@ export default function NotifyModal({ branches, onClose }) {
             {branches.map(branch => {
               const ids = branch.themes.map(t => t.id)
               const allChecked = ids.every(id => notifyThemes.has(id))
+              const isOpen = openBranches.has(branch.id)
               return (
                 <div key={branch.id} className="modal-branch">
-                  <div className="modal-branch-header">
-                    <span className="modal-branch-name">{branch.brand} {branch.name}</span>
-                    <label className="modal-theme-toggle">
+                  <button
+                    className="modal-branch-header"
+                    onClick={() => toggleBranch(branch.id)}
+                  >
+                    <span className="modal-branch-name">
+                      <span className={`modal-branch-chevron${isOpen ? ' open' : ''}`}>›</span>
+                      {branch.brand} {branch.name}
+                    </span>
+                    <label
+                      className="modal-theme-toggle"
+                      onClick={e => e.stopPropagation()}
+                    >
                       <input
                         type="checkbox"
                         checked={allChecked}
@@ -166,50 +185,52 @@ export default function NotifyModal({ branches, onClose }) {
                       />
                       전체
                     </label>
-                  </div>
-                  <div className="modal-themes">
-                    {branch.themes.map(theme => {
-                      const isCustomOpen = openCustom.has(theme.id)
-                      const customDayMin = themeSettings[theme.id]?.dayMin ?? [...dayMin]
-                      return (
-                        <div key={theme.id} className="modal-theme-row">
-                          <div className="modal-theme-row-header">
-                            <label className="modal-theme-toggle">
-                              <input
-                                type="checkbox"
-                                checked={notifyThemes.has(theme.id)}
-                                onChange={() => toggleTheme(theme.id)}
-                              />
-                              {theme.emoji} {theme.name}
-                            </label>
-                            <button
-                              className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
-                              onClick={() => toggleCustom(theme.id, dayMin)}
-                              title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
-                            >
-                              {isCustomOpen ? '커스텀 ✕' : '커스텀'}
-                            </button>
-                          </div>
-                          {isCustomOpen && (
-                            <div className="modal-theme-custom">
-                              <div className="modal-day-grid">
-                                {DAYS.map((label, idx) => (
-                                  <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
-                                    <span className="modal-day-label">{label}</span>
-                                    <HourSelect
-                                      compact
-                                      value={customDayMin[idx]}
-                                      onChange={v => setThemeDay(theme.id, idx, v)}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
+                  </button>
+                  {isOpen && (
+                    <div className="modal-themes">
+                      {branch.themes.map(theme => {
+                        const isCustomOpen = openCustom.has(theme.id)
+                        const customDayMin = themeSettings[theme.id]?.dayMin ?? [...dayMin]
+                        return (
+                          <div key={theme.id} className="modal-theme-row">
+                            <div className="modal-theme-row-header">
+                              <label className="modal-theme-toggle">
+                                <input
+                                  type="checkbox"
+                                  checked={notifyThemes.has(theme.id)}
+                                  onChange={() => toggleTheme(theme.id)}
+                                />
+                                {theme.emoji} {theme.name}
+                              </label>
+                              <button
+                                className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
+                                onClick={() => toggleCustom(theme.id, dayMin)}
+                                title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
+                              >
+                                {isCustomOpen ? '커스텀 ✕' : '커스텀'}
+                              </button>
                             </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
+                            {isCustomOpen && (
+                              <div className="modal-theme-custom">
+                                <div className="modal-day-grid">
+                                  {DAYS.map((label, idx) => (
+                                    <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
+                                      <span className="modal-day-label">{label}</span>
+                                      <HourSelect
+                                        compact
+                                        value={customDayMin[idx]}
+                                        onChange={v => setThemeDay(theme.id, idx, v)}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )
             })}
