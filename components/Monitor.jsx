@@ -38,18 +38,10 @@ function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
       .then(r => r.json())
       .then(data => {
         const allIds = THEMES.map(t => t.id)
-        const disabledList = (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
-        let next
-
-        if (disabledList.length > 0) {
-          const disabled = new Set(disabledList)
-          next = new Set(allIds.filter(id => !disabled.has(id)))
-        } else if (data.NOTIFY_THEMES) {
-          const oldEnabled = new Set(data.NOTIFY_THEMES.split(',').map(s => s.trim()).filter(Boolean))
-          next = new Set(allIds.filter(id => oldEnabled.has(id)))
-        } else {
-          next = new Set(allIds)
-        }
+        const disabled = new Set(
+          (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
+        )
+        const next = new Set(allIds.filter(id => !disabled.has(id)))
 
         notifyThemesRef.current = next
         setNotifyThemes(next)
@@ -95,7 +87,6 @@ function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         NOTIFY_DISABLED_THEMES: disabled.join(','),
-        NOTIFY_THEMES: [...next].join(','),
       }),
     }).catch(console.error)
   }, [THEMES])
