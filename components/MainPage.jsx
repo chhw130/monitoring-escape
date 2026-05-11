@@ -4,80 +4,14 @@ import Link from 'next/link'
 import NotifyModal from './NotifyModal'
 import './MainPage.css'
 
-const BRANCHES = [
-  {
-    id: 'whosthere',
-    brand: '키이스케이프',
-    name: '후즈데어점',
-    location: '강남',
-    themes: [
-      { id: 'tutu',   name: '투투 어드벤처', emoji: '🗺️' },
-      { id: 'ayako',  name: 'AYAKO',        emoji: '🎭' },
-      { id: 'goerok', name: '괴록',          emoji: '👻' },
-    ],
-  },
-  {
-    id: 'oasis-hongdae',
-    brand: '오아시스뮤지엄',
-    name: '홍대점',
-    location: '홍대',
-    themes: [
-      { id: 'oasis-1', name: '업사이드 다운',      emoji: '🙃' },
-      { id: 'oasis-5', name: '미씽 삭스 미스터리', emoji: '🧦' },
-      { id: 'oasis-6', name: '배드 타임',          emoji: '😈' },
-      { id: 'oasis-8', name: '하이 맥스',          emoji: '🏆' },
-    ],
-  },
-  {
-    id: 'frank',
-    brand: '프랭크',
-    name: '프랭크의 골동품가게',
-    location: '강남',
-    themes: [
-      { id: 'frank-5', name: 'My Private Heaven',     emoji: '🏠' },
-      { id: 'frank-6', name: 'Brooklyn My Love',      emoji: '🌆' },
-      { id: 'frank-7', name: 'Plan to save my dear',  emoji: '🎒' },
-    ],
-  },
-  {
-    id: 'play33-konkuk',
-    brand: 'play33',
-    name: '건대점',
-    location: '건대',
-    themes: [
-      { id: 'play33-dial',    name: '다이얼', emoji: '☎️' },
-      { id: 'play33-witness', name: '목격자', emoji: '👁️' },
-      { id: 'play33-thatday', name: '그 날',  emoji: '🗓️' },
-    ],
-  },
-  {
-    id: 'play33-hongdae',
-    brand: 'play33',
-    name: '홍대점',
-    location: '홍대',
-    themes: [
-      { id: 'play33-pian', name: '피안화', emoji: '🌸' },
-    ],
-  },
-  {
-    id: 'seoulscape-hongdae',
-    brand: '서울이스케이프룸',
-    name: '홍대점',
-    location: '홍대',
-    themes: [
-      { id: 'seoulscape-osiris', name: '오시리스', emoji: '🏺' },
-    ],
-  },
-]
-
-export default function MainPage() {
+export default function MainPage({ branches }) {
   const [query, setQuery]         = useState('')
   const [modalOpen, setModalOpen] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return BRANCHES
-    return BRANCHES.filter(b =>
+    if (!q) return branches
+    return branches.filter(b =>
       b.brand.toLowerCase().includes(q) ||
       b.name.toLowerCase().includes(q) ||
       b.location.toLowerCase().includes(q) ||
@@ -133,7 +67,7 @@ export default function MainPage() {
       )}
 
       {modalOpen && (
-        <NotifyModal branches={BRANCHES} onClose={() => setModalOpen(false)} />
+        <NotifyModal branches={branches} onClose={() => setModalOpen(false)} />
       )}
     </div>
   )
