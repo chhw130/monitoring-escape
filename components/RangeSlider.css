@@ -7,7 +7,7 @@
   text-align: center;
   font-size: 15px;
   font-weight: 700;
-  color: #6eb3f7;
+  color: #0284c7;
   margin-bottom: 14px;
   letter-spacing: -0.2px;
 }
@@ -15,7 +15,7 @@
 .rs-track-wrap {
   position: relative;
   height: 6px;
-  background: #2a2a3a;
+  background: #dde3f0;
   border-radius: 3px;
   margin: 0 8px;
 }
@@ -24,7 +24,7 @@
   position: absolute;
   top: 0;
   height: 100%;
-  background: #5b5ef7;
+  background: #0284c7;
   border-radius: 3px;
   pointer-events: none;
 }
@@ -53,16 +53,16 @@
   height: 20px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #5b5ef7;
+  border: 2px solid #0284c7;
   cursor: pointer;
   pointer-events: all;
-  box-shadow: 0 1px 6px rgba(0,0,0,.5);
+  box-shadow: 0 1px 6px rgba(2,132,199,.25);
   transition: transform .12s, box-shadow .12s;
 }
 .rs-input::-webkit-slider-thumb:hover,
 .rs-input:active::-webkit-slider-thumb {
   transform: scale(1.15);
-  box-shadow: 0 0 0 4px rgba(91,94,247,.25);
+  box-shadow: 0 0 0 4px rgba(2,132,199,.18);
 }
 
 /* z-index: min이 앞에 오도록 상황에 따라 조정 */
@@ -75,5 +75,5 @@
   margin-top: 8px;
   padding: 0 4px;
   font-size: 11px;
-  color: #555;
+  color: #94a3b8;
 }

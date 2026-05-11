@@ -31,7 +31,7 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
     entries.reduce((s, [, ts]) => s + ts.length, 0), [entries]
   )
 
-  const statusColor = slots === null ? '#666' : entries.length > 0 ? '#3ddc84' : '#ff5f5f'
+  const statusColor = slots === null ? '#94a3b8' : entries.length > 0 ? '#059669' : '#ef4444'
   const statusText  = slots === null ? '미확인' : entries.length > 0 ? `${entries.length}일 가능` : '없음'
 
   return (
@@ -78,7 +78,7 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
       {slots !== null && (
         <div className="stats-row">
           <div className="stat">
-            <span className="stat-num" style={{ color: entries.length > 0 ? '#3ddc84' : '#ff5f5f' }}>
+            <span className="stat-num" style={{ color: entries.length > 0 ? '#059669' : '#ef4444' }}>
               {entries.length}
             </span>
             <span className="stat-label">가능 날짜</span>

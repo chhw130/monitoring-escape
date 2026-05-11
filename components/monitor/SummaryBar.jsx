@@ -5,7 +5,7 @@ const SummaryBar = memo(function SummaryBar({ totalDates, onReset, isDefault }) 
     <div className="summary-bar">
       <span>
         전체 예약 가능&nbsp;
-        <strong style={{ color: totalDates > 0 ? '#3ddc84' : '#ff5f5f' }}>
+        <strong style={{ color: totalDates > 0 ? '#059669' : '#ef4444' }}>
           {totalDates}개 날짜
         </strong>
       </span>
