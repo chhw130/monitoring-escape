@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import Link from 'next/link'
 
-const AppHeader = memo(function AppHeader({ onRefreshAll, loading, lastAllCheck, branchName, themeCount, onNotifyOpen }) {
+const AppHeader = memo(function AppHeader({ onRefreshAll, loading, lastAllCheck, branchName, themeCount }) {
   return (
     <header className="app-header">
       <div>
@@ -11,9 +11,6 @@ const AppHeader = memo(function AppHeader({ onRefreshAll, loading, lastAllCheck,
       </div>
       <div className="header-right">
         <div className="header-btn-row">
-          <button className="btn-notify-open" onClick={onNotifyOpen}>
-            🔔 알림 설정
-          </button>
           <button className="btn-all" onClick={onRefreshAll} disabled={loading}>
             {loading ? <><span className="spinner" /> 확인중...</> : '전체 새로고침'}
           </button>

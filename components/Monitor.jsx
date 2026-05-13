@@ -5,7 +5,6 @@ import AppHeader from './monitor/AppHeader'
 import FilterCard from './monitor/FilterCard'
 import SummaryBar from './monitor/SummaryBar'
 import ThemeCard  from './monitor/ThemeCard'
-import NotifyModal from './NotifyModal'
 import './Monitor.css'
 
 const POLL_INTERVAL = 240  // 크론 주기와 동일 (4분)
@@ -28,7 +27,6 @@ function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
   const [localTimeRange, setLocalTimeRange] = useState([minHour, maxHour])
   const [notifyThemes, setNotifyThemes]     = useState(() => new Set(THEMES.map(t => t.id)))
   const [settingsLoaded, setSettingsLoaded] = useState(false)
-  const [modalOpen, setModalOpen]           = useState(false)
   const rangeUpdateTimer = useRef(null)
   const notifyThemesRef  = useRef(new Set())
 
@@ -143,13 +141,6 @@ function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
     [localTimeRange]
   )
 
-  const notifyBranches = useMemo(() => [{
-    id: branchId,
-    brand: brand ?? '',
-    name: branchName,
-    themes: THEMES.map(t => ({ id: t.id, name: t.name, emoji: t.emoji })),
-  }], [branchId, brand, branchName, THEMES])
-
   return (
     <div className="app">
       <AppHeader
@@ -158,7 +149,6 @@ function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
         lastAllCheck={lastAllCheck}
         branchName={branchName}
         themeCount={THEMES.length}
-        onNotifyOpen={() => setModalOpen(true)}
       />
 
       <div className="legend-bar">
@@ -190,9 +180,6 @@ function MonitorInner({ branchId, brand, branchName, themes: THEMES }) {
         ))}
       </div>
 
-      {modalOpen && (
-        <NotifyModal branches={notifyBranches} onClose={() => setModalOpen(false)} />
-      )}
     </div>
   )
 }
