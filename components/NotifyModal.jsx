@@ -6,7 +6,8 @@ import './NotifyModal.css'
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
 const WEEKDAY_IDX = [1, 2, 3, 4, 5]
 const WEEKEND_IDX = [0, 6]
-const DEFAULT_DAY_MIN = [0, 17, 17, 17, 17, 17, 0] // 일~토
+const DEFAULT_DAY_MIN = [0, 17, 17, 17, 17, 17, 0]
+const DEFAULT_DAY_MAX = [24, 24, 24, 24, 24, 24, 24]
 
 function parseDayMin(str) {
   const parts = str.split(',').map(Number)
@@ -14,7 +15,13 @@ function parseDayMin(str) {
   return [...DEFAULT_DAY_MIN]
 }
 
-const HourSelect = ({ value, onChange, compact }) => (
+function parseDayMax(str) {
+  const parts = str.split(',').map(Number)
+  if (parts.length === 7 && parts.every(n => !isNaN(n))) return parts
+  return [...DEFAULT_DAY_MAX]
+}
+
+const HourMinSelect = ({ value, onChange, compact }) => (
   <select
     className={`modal-select${compact ? ' modal-select-compact' : ''}`}
     value={value}
@@ -22,18 +29,29 @@ const HourSelect = ({ value, onChange, compact }) => (
   >
     <option value={-1}>없음</option>
     {Array.from({ length: 25 }, (_, i) => (
-      <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
+      <option key={i} value={i}>{i === 0 ? '전체' : `${i}시~`}</option>
     ))}
   </select>
 )
 
+const HourMaxSelect = ({ value, onChange, compact }) => (
+  <select
+    className={`modal-select${compact ? ' modal-select-compact' : ''}`}
+    value={value}
+    onChange={e => onChange(Number(e.target.value))}
+  >
+    {Array.from({ length: 24 }, (_, i) => (
+      <option key={i + 1} value={i + 1}>{i + 1 === 24 ? '제한없음' : `~${i + 1}시`}</option>
+    ))}
+  </select>
+)
 
 export default function NotifyModal({ branches, onClose }) {
   const [dayMin, setDayMin]               = useState(DEFAULT_DAY_MIN)
+  const [dayMax, setDayMax]               = useState(DEFAULT_DAY_MAX)
   const [notifyThemes, setNotifyThemes]   = useState(new Set())
-  // { [themeId]: number[] } — dayMin 오버라이드가 있는 테마
+  // { [themeId]: { dayMin: number[], dayMax: number[] } }
   const [themeSettings, setThemeSettings] = useState({})
-  // 커스텀 패널이 열린 테마 ID Set
   const [openCustom, setOpenCustom]       = useState(new Set())
   const [openBranches, setOpenBranches]   = useState(new Set())
   const [saving, setSaving]               = useState(false)
@@ -44,6 +62,7 @@ export default function NotifyModal({ branches, onClose }) {
       .then(r => r.json())
       .then(data => {
         setDayMin(parseDayMin(data.NOTIFY_DAY_MIN ?? ''))
+        setDayMax(parseDayMax(data.NOTIFY_DAY_MAX ?? ''))
         const allIds = branches.flatMap(b => b.themes.map(t => t.id))
         const disabledList = (data.NOTIFY_DISABLED_THEMES ?? '').split(',').map(s => s.trim()).filter(Boolean)
         let enabledSet
@@ -59,10 +78,14 @@ export default function NotifyModal({ branches, onClose }) {
         setNotifyThemes(enabledSet)
         try {
           const parsed = JSON.parse(data.NOTIFY_THEME_SETTINGS ?? '{}')
-          // dayMin 배열 검증
           const valid = {}
           for (const [id, cfg] of Object.entries(parsed)) {
-            if (Array.isArray(cfg.dayMin) && cfg.dayMin.length === 7) valid[id] = cfg
+            if (Array.isArray(cfg.dayMin) && cfg.dayMin.length === 7) {
+              valid[id] = {
+                dayMin: cfg.dayMin,
+                dayMax: Array.isArray(cfg.dayMax) && cfg.dayMax.length === 7 ? cfg.dayMax : [...DEFAULT_DAY_MAX],
+              }
+            }
           }
           setThemeSettings(valid)
           setOpenCustom(new Set(Object.keys(valid)))
@@ -79,9 +102,7 @@ export default function NotifyModal({ branches, onClose }) {
     })
   }, [])
 
-  const disableAll = useCallback(() => {
-    setNotifyThemes(new Set())
-  }, [])
+  const disableAll = useCallback(() => setNotifyThemes(new Set()), [])
 
   const toggleTheme = useCallback((id) => {
     setNotifyThemes(prev => {
@@ -99,7 +120,15 @@ export default function NotifyModal({ branches, onClose }) {
     })
   }, [])
 
-  const toggleCustom = useCallback((id, currentDayMin) => {
+  const setGlobalDayMin = useCallback((idx, val) => {
+    setDayMin(prev => prev.map((v, i) => i === idx ? val : v))
+  }, [])
+
+  const setGlobalDayMax = useCallback((idx, val) => {
+    setDayMax(prev => prev.map((v, i) => i === idx ? val : v))
+  }, [])
+
+  const toggleCustom = useCallback((id, currentDayMin, currentDayMax) => {
     setOpenCustom(prev => {
       const next = new Set(prev)
       if (next.has(id)) {
@@ -107,22 +136,28 @@ export default function NotifyModal({ branches, onClose }) {
         setThemeSettings(s => { const n = { ...s }; delete n[id]; return n })
       } else {
         next.add(id)
-        setThemeSettings(s => ({ ...s, [id]: { dayMin: [...currentDayMin] } }))
+        setThemeSettings(s => ({ ...s, [id]: { dayMin: [...currentDayMin], dayMax: [...currentDayMax] } }))
       }
       return next
     })
   }, [])
 
-  const setThemeDay = useCallback((themeId, idx, val) => {
+  const setThemeDayMin = useCallback((themeId, idx, val) => {
     setThemeSettings(prev => ({
       ...prev,
       [themeId]: { ...prev[themeId], dayMin: prev[themeId].dayMin.map((v, i) => i === idx ? val : v) },
     }))
   }, [])
 
+  const setThemeDayMax = useCallback((themeId, idx, val) => {
+    setThemeSettings(prev => ({
+      ...prev,
+      [themeId]: { ...prev[themeId], dayMax: prev[themeId].dayMax.map((v, i) => i === idx ? val : v) },
+    }))
+  }, [])
+
   const handleSave = async () => {
     setSaving(true)
-    // openCustom에 있는 테마만 themeSettings에 포함
     const filteredSettings = {}
     for (const id of openCustom) {
       if (themeSettings[id]) filteredSettings[id] = themeSettings[id]
@@ -131,10 +166,11 @@ export default function NotifyModal({ branches, onClose }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        NOTIFY_DAY_MIN:           dayMin.join(','),
-        NOTIFY_THEMES:            [...notifyThemes].join(','),
-        NOTIFY_DISABLED_THEMES:   branches.flatMap(b => b.themes.map(t => t.id)).filter(id => !notifyThemes.has(id)).join(','),
-        NOTIFY_THEME_SETTINGS:    JSON.stringify(filteredSettings),
+        NOTIFY_DAY_MIN:         dayMin.join(','),
+        NOTIFY_DAY_MAX:         dayMax.join(','),
+        NOTIFY_THEMES:          [...notifyThemes].join(','),
+        NOTIFY_DISABLED_THEMES: branches.flatMap(b => b.themes.map(t => t.id)).filter(id => !notifyThemes.has(id)).join(','),
+        NOTIFY_THEME_SETTINGS:  JSON.stringify(filteredSettings),
       }),
     }).catch(console.error)
     setSaving(false)
@@ -155,6 +191,33 @@ export default function NotifyModal({ branches, onClose }) {
         </div>
 
         <div className="modal-body">
+          <section className="modal-section">
+            <h3 className="modal-section-title">기본 알림 시간대</h3>
+            <p className="modal-section-hint">요일별 알림을 받을 시간 범위입니다. 테마 커스텀 설정이 없으면 이 값이 적용됩니다.</p>
+            <div className="modal-day-grid">
+              {DAYS.map((label, idx) => (
+                <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
+                  <span className="modal-day-label">{label}</span>
+                  <HourMinSelect
+                    compact
+                    value={dayMin[idx]}
+                    onChange={v => setGlobalDayMin(idx, v)}
+                  />
+                  {dayMin[idx] !== -1 && (
+                    <>
+                      <span className="modal-day-sep">~</span>
+                      <HourMaxSelect
+                        compact
+                        value={dayMax[idx]}
+                        onChange={v => setGlobalDayMax(idx, v)}
+                      />
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className="modal-section">
             <div className="modal-section-header">
               <h3 className="modal-section-title">알림 테마</h3>
@@ -191,6 +254,7 @@ export default function NotifyModal({ branches, onClose }) {
                       {branch.themes.map(theme => {
                         const isCustomOpen = openCustom.has(theme.id)
                         const customDayMin = themeSettings[theme.id]?.dayMin ?? [...dayMin]
+                        const customDayMax = themeSettings[theme.id]?.dayMax ?? [...dayMax]
                         return (
                           <div key={theme.id} className="modal-theme-row">
                             <div className="modal-theme-row-header">
@@ -204,7 +268,7 @@ export default function NotifyModal({ branches, onClose }) {
                               </label>
                               <button
                                 className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
-                                onClick={() => toggleCustom(theme.id, dayMin)}
+                                onClick={() => toggleCustom(theme.id, dayMin, dayMax)}
                                 title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
                               >
                                 {isCustomOpen ? '커스텀 ✕' : '커스텀'}
@@ -216,11 +280,21 @@ export default function NotifyModal({ branches, onClose }) {
                                   {DAYS.map((label, idx) => (
                                     <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
                                       <span className="modal-day-label">{label}</span>
-                                      <HourSelect
+                                      <HourMinSelect
                                         compact
                                         value={customDayMin[idx]}
-                                        onChange={v => setThemeDay(theme.id, idx, v)}
+                                        onChange={v => setThemeDayMin(theme.id, idx, v)}
                                       />
+                                      {customDayMin[idx] !== -1 && (
+                                        <>
+                                          <span className="modal-day-sep">~</span>
+                                          <HourMaxSelect
+                                            compact
+                                            value={customDayMax[idx]}
+                                            onChange={v => setThemeDayMax(theme.id, idx, v)}
+                                          />
+                                        </>
+                                      )}
                                     </div>
                                   ))}
                                 </div>

@@ -2,24 +2,26 @@ const SITE_URL      = process.env.SITE_URL
 const DISCORD_URL   = process.env.DISCORD_WEBHOOK_URL
 const NOTIFY_THEMES = new Set((process.env.NOTIFY_THEMES || 'tutu,ayako,goerok').split(',').map(s => s.trim()))
 
-// 요일별 알림 시작 시간 (0=일 ~ 6=토), 기본: 주말 전체, 평일 17시 이후
-const DAY_MIN = (process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0')
-  .split(',').map(Number)
+// 요일별 알림 시작/종료 시간 (0=일 ~ 6=토), 기본: 주말 전체, 평일 17시 이후
+const DAY_MIN = (process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0').split(',').map(Number)
+const DAY_MAX = (process.env.NOTIFY_DAY_MAX || '24,24,24,24,24,24,24').split(',').map(Number)
 
-// 테마별 개별 설정 (없으면 글로벌 DAY_MIN 사용)
+// 테마별 개별 설정 (없으면 글로벌 DAY_MIN/DAY_MAX 사용)
 const THEME_SETTINGS = JSON.parse(process.env.NOTIFY_THEME_SETTINGS || '{}')
 
 function isTimeAllowed(dateStr, timeStr, themeId) {
-  const dow     = new Date(dateStr + 'T00:00:00').getDay()
-  const hour    = parseInt(timeStr.split(':')[0])
-  const dayMin  = THEME_SETTINGS[themeId]?.dayMin ?? DAY_MIN
+  const dow    = new Date(dateStr + 'T00:00:00').getDay()
+  const hour   = parseInt(timeStr.split(':')[0])
+  const dayMin = THEME_SETTINGS[themeId]?.dayMin ?? DAY_MIN
+  const dayMax = THEME_SETTINGS[themeId]?.dayMax ?? DAY_MAX
   if (dayMin[dow] === -1) return false
-  return hour >= dayMin[dow]
+  return hour >= dayMin[dow] && hour < dayMax[dow]
 }
 
 // 슬롯 조회 (없음 요일은 서버에서 fetch 자체를 건너뜀)
 const params = new URLSearchParams({
   dayMin: process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0',
+  dayMax: process.env.NOTIFY_DAY_MAX || '24,24,24,24,24,24,24',
   themeSettings: process.env.NOTIFY_THEME_SETTINGS || '{}',
 })
 const res = await fetch(`${SITE_URL}/api/slots/all?${params}`)
