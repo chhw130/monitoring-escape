@@ -1,10 +1,8 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './NotifyModal.css'
 
-// 요일 인덱스: 0=일, 1=월, ..., 6=토
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
-const WEEKDAY_IDX = [1, 2, 3, 4, 5]
 const WEEKEND_IDX = [0, 6]
 const DEFAULT_DAY_MIN = [0, 17, 17, 17, 17, 17, 0]
 const DEFAULT_DAY_MAX = [24, 24, 24, 24, 24, 24, 24]
@@ -21,41 +19,57 @@ function parseDayMax(str) {
   return [...DEFAULT_DAY_MAX]
 }
 
-const HourMinSelect = ({ value, onChange, compact }) => (
-  <select
-    className={`modal-select${compact ? ' modal-select-compact' : ''}`}
-    value={value}
-    onChange={e => onChange(Number(e.target.value))}
-  >
+const HourMinSelect = ({ value, onChange }) => (
+  <select className="modal-select modal-select-time" value={value} onChange={e => onChange(Number(e.target.value))}>
     <option value={-1}>없음</option>
     {Array.from({ length: 25 }, (_, i) => (
-      <option key={i} value={i}>{i === 0 ? '전체' : `${i}시~`}</option>
+      <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
     ))}
   </select>
 )
 
-const HourMaxSelect = ({ value, onChange, compact }) => (
-  <select
-    className={`modal-select${compact ? ' modal-select-compact' : ''}`}
-    value={value}
-    onChange={e => onChange(Number(e.target.value))}
-  >
+const HourMaxSelect = ({ value, onChange }) => (
+  <select className="modal-select modal-select-time" value={value} onChange={e => onChange(Number(e.target.value))}>
     {Array.from({ length: 24 }, (_, i) => (
-      <option key={i + 1} value={i + 1}>{i + 1 === 24 ? '제한없음' : `~${i + 1}시`}</option>
+      <option key={i + 1} value={i + 1}>{i + 1 === 24 ? '제한없음' : `${i + 1}시 이전`}</option>
     ))}
   </select>
 )
+
+function DayRangeList({ dayMin, dayMax, onChangeMin, onChangeMax }) {
+  return (
+    <div className="modal-day-list">
+      {DAYS.map((label, idx) => (
+        <div key={idx} className={`modal-day-row${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
+          <span className="modal-day-row-label">{label}</span>
+          <HourMinSelect value={dayMin[idx]} onChange={v => onChangeMin(idx, v)} />
+          {dayMin[idx] !== -1 && (
+            <>
+              <span className="modal-day-sep">~</span>
+              <HourMaxSelect value={dayMax[idx]} onChange={v => onChangeMax(idx, v)} />
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function NotifyModal({ branches, onClose }) {
   const [dayMin, setDayMin]               = useState(DEFAULT_DAY_MIN)
   const [dayMax, setDayMax]               = useState(DEFAULT_DAY_MAX)
   const [notifyThemes, setNotifyThemes]   = useState(new Set())
-  // { [themeId]: { dayMin: number[], dayMax: number[] } }
   const [themeSettings, setThemeSettings] = useState({})
   const [openCustom, setOpenCustom]       = useState(new Set())
   const [openBranches, setOpenBranches]   = useState(new Set())
   const [saving, setSaving]               = useState(false)
   const [saved, setSaved]                 = useState(false)
+
+  // refs로 최신값 유지 → toggleCustom이 dayMin/dayMax에 의존하지 않도록
+  const dayMinRef = useRef(dayMin)
+  const dayMaxRef = useRef(dayMax)
+  useEffect(() => { dayMinRef.current = dayMin }, [dayMin])
+  useEffect(() => { dayMaxRef.current = dayMax }, [dayMax])
 
   useEffect(() => {
     fetch('/api/notify-settings')
@@ -128,7 +142,8 @@ export default function NotifyModal({ branches, onClose }) {
     setDayMax(prev => prev.map((v, i) => i === idx ? val : v))
   }, [])
 
-  const toggleCustom = useCallback((id, currentDayMin, currentDayMax) => {
+  // dayMin/dayMax를 직접 클로저로 잡지 않고 ref로 읽어 불필요한 리렌더 방지
+  const toggleCustom = useCallback((id) => {
     setOpenCustom(prev => {
       const next = new Set(prev)
       if (next.has(id)) {
@@ -136,7 +151,10 @@ export default function NotifyModal({ branches, onClose }) {
         setThemeSettings(s => { const n = { ...s }; delete n[id]; return n })
       } else {
         next.add(id)
-        setThemeSettings(s => ({ ...s, [id]: { dayMin: [...currentDayMin], dayMax: [...currentDayMax] } }))
+        setThemeSettings(s => ({
+          ...s,
+          [id]: { dayMin: [...dayMinRef.current], dayMax: [...dayMaxRef.current] },
+        }))
       }
       return next
     })
@@ -193,29 +211,13 @@ export default function NotifyModal({ branches, onClose }) {
         <div className="modal-body">
           <section className="modal-section">
             <h3 className="modal-section-title">기본 알림 시간대</h3>
-            <p className="modal-section-hint">요일별 알림을 받을 시간 범위입니다. 테마 커스텀 설정이 없으면 이 값이 적용됩니다.</p>
-            <div className="modal-day-grid">
-              {DAYS.map((label, idx) => (
-                <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
-                  <span className="modal-day-label">{label}</span>
-                  <HourMinSelect
-                    compact
-                    value={dayMin[idx]}
-                    onChange={v => setGlobalDayMin(idx, v)}
-                  />
-                  {dayMin[idx] !== -1 && (
-                    <>
-                      <span className="modal-day-sep">~</span>
-                      <HourMaxSelect
-                        compact
-                        value={dayMax[idx]}
-                        onChange={v => setGlobalDayMax(idx, v)}
-                      />
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
+            <p className="modal-section-hint">테마 커스텀 설정이 없으면 이 기준이 적용됩니다.</p>
+            <DayRangeList
+              dayMin={dayMin}
+              dayMax={dayMax}
+              onChangeMin={setGlobalDayMin}
+              onChangeMax={setGlobalDayMax}
+            />
           </section>
 
           <section className="modal-section">
@@ -229,23 +231,13 @@ export default function NotifyModal({ branches, onClose }) {
               const isOpen = openBranches.has(branch.id)
               return (
                 <div key={branch.id} className="modal-branch">
-                  <button
-                    className="modal-branch-header"
-                    onClick={() => toggleBranch(branch.id)}
-                  >
+                  <button className="modal-branch-header" onClick={() => toggleBranch(branch.id)}>
                     <span className="modal-branch-name">
                       <span className={`modal-branch-chevron${isOpen ? ' open' : ''}`}>›</span>
                       {branch.brand} {branch.name}
                     </span>
-                    <label
-                      className="modal-theme-toggle"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={allChecked}
-                        onChange={e => toggleAll(ids, e.target.checked)}
-                      />
+                    <label className="modal-theme-toggle" onClick={e => e.stopPropagation()}>
+                      <input type="checkbox" checked={allChecked} onChange={e => toggleAll(ids, e.target.checked)} />
                       전체
                     </label>
                   </button>
@@ -253,8 +245,8 @@ export default function NotifyModal({ branches, onClose }) {
                     <div className="modal-themes">
                       {branch.themes.map(theme => {
                         const isCustomOpen = openCustom.has(theme.id)
-                        const customDayMin = themeSettings[theme.id]?.dayMin ?? [...dayMin]
-                        const customDayMax = themeSettings[theme.id]?.dayMax ?? [...dayMax]
+                        const customDayMin = themeSettings[theme.id]?.dayMin ?? dayMin
+                        const customDayMax = themeSettings[theme.id]?.dayMax ?? dayMax
                         return (
                           <div key={theme.id} className="modal-theme-row">
                             <div className="modal-theme-row-header">
@@ -268,7 +260,7 @@ export default function NotifyModal({ branches, onClose }) {
                               </label>
                               <button
                                 className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
-                                onClick={() => toggleCustom(theme.id, dayMin, dayMax)}
+                                onClick={() => toggleCustom(theme.id)}
                                 title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
                               >
                                 {isCustomOpen ? '커스텀 ✕' : '커스텀'}
@@ -276,28 +268,12 @@ export default function NotifyModal({ branches, onClose }) {
                             </div>
                             {isCustomOpen && (
                               <div className="modal-theme-custom">
-                                <div className="modal-day-grid">
-                                  {DAYS.map((label, idx) => (
-                                    <div key={idx} className={`modal-day-item${WEEKEND_IDX.includes(idx) ? ' weekend' : ''}`}>
-                                      <span className="modal-day-label">{label}</span>
-                                      <HourMinSelect
-                                        compact
-                                        value={customDayMin[idx]}
-                                        onChange={v => setThemeDayMin(theme.id, idx, v)}
-                                      />
-                                      {customDayMin[idx] !== -1 && (
-                                        <>
-                                          <span className="modal-day-sep">~</span>
-                                          <HourMaxSelect
-                                            compact
-                                            value={customDayMax[idx]}
-                                            onChange={v => setThemeDayMax(theme.id, idx, v)}
-                                          />
-                                        </>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
+                                <DayRangeList
+                                  dayMin={customDayMin}
+                                  dayMax={customDayMax}
+                                  onChangeMin={(idx, v) => setThemeDayMin(theme.id, idx, v)}
+                                  onChangeMax={(idx, v) => setThemeDayMax(theme.id, idx, v)}
+                                />
                               </div>
                             )}
                           </div>
