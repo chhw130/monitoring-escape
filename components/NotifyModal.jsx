@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react'
 import './NotifyModal.css'
 
 const DAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -58,24 +58,28 @@ function parseChannelData(data, suffix, allIds) {
   }
 }
 
-const HourMinSelect = ({ value, onChange }) => (
-  <select className="modal-select modal-select-time" value={value} onChange={e => onChange(Number(e.target.value))}>
-    <option value={-1}>없음</option>
-    {Array.from({ length: 25 }, (_, i) => (
-      <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
-    ))}
-  </select>
-)
+const HourMinSelect = memo(function HourMinSelect({ value, onChange }) {
+  return (
+    <select className="modal-select modal-select-time" value={value} onChange={e => onChange(Number(e.target.value))}>
+      <option value={-1}>없음</option>
+      {Array.from({ length: 25 }, (_, i) => (
+        <option key={i} value={i}>{i === 0 ? '전체' : `${i}시 이후`}</option>
+      ))}
+    </select>
+  )
+})
 
-const HourMaxSelect = ({ value, onChange }) => (
-  <select className="modal-select modal-select-time" value={value} onChange={e => onChange(Number(e.target.value))}>
-    {Array.from({ length: 24 }, (_, i) => (
-      <option key={i + 1} value={i + 1}>{i + 1 === 24 ? '제한없음' : `${i + 1}시 이전`}</option>
-    ))}
-  </select>
-)
+const HourMaxSelect = memo(function HourMaxSelect({ value, onChange }) {
+  return (
+    <select className="modal-select modal-select-time" value={value} onChange={e => onChange(Number(e.target.value))}>
+      {Array.from({ length: 24 }, (_, i) => (
+        <option key={i + 1} value={i + 1}>{i + 1 === 24 ? '제한없음' : `${i + 1}시 이전`}</option>
+      ))}
+    </select>
+  )
+})
 
-function DayRangeList({ dayMin, dayMax, onChangeMin, onChangeMax }) {
+const DayRangeList = memo(function DayRangeList({ dayMin, dayMax, onChangeMin, onChangeMax }) {
   return (
     <div className="modal-day-list">
       {DAYS.map((label, idx) => (
@@ -92,25 +96,61 @@ function DayRangeList({ dayMin, dayMax, onChangeMin, onChangeMax }) {
       ))}
     </div>
   )
-}
+})
+
+const ThemeRow = memo(function ThemeRow({
+  theme, isChecked, isCustomOpen, customDayMin, customDayMax,
+  toggleTheme, toggleCustom, setThemeDayMin, setThemeDayMax,
+}) {
+  const handleToggle      = useCallback(() => toggleTheme(theme.id), [toggleTheme, theme.id])
+  const handleToggleCustom = useCallback(() => toggleCustom(theme.id), [toggleCustom, theme.id])
+  const handleSetDayMin   = useCallback((idx, v) => setThemeDayMin(theme.id, idx, v), [setThemeDayMin, theme.id])
+  const handleSetDayMax   = useCallback((idx, v) => setThemeDayMax(theme.id, idx, v), [setThemeDayMax, theme.id])
+
+  return (
+    <div className="modal-theme-row">
+      <div className="modal-theme-row-header">
+        <label className="modal-theme-toggle">
+          <input type="checkbox" checked={isChecked} onChange={handleToggle} />
+          {theme.emoji} {theme.name}
+        </label>
+        <button
+          className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
+          onClick={handleToggleCustom}
+          title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
+        >
+          {isCustomOpen ? '커스텀 ✕' : '커스텀'}
+        </button>
+      </div>
+      {isCustomOpen && (
+        <div className="modal-theme-custom">
+          <DayRangeList
+            dayMin={customDayMin}
+            dayMax={customDayMax}
+            onChangeMin={handleSetDayMin}
+            onChangeMax={handleSetDayMax}
+          />
+        </div>
+      )}
+    </div>
+  )
+})
 
 export default function NotifyModal({ branches, onClose }) {
-  const allIds = branches.flatMap(b => b.themes.map(t => t.id))
+  const allIds = useMemo(() => branches.flatMap(b => b.themes.map(t => t.id)), [branches])
 
+  const activeTabRef = useRef('A')
   const [activeTab, setActiveTab] = useState('A')
+
   const [channelData, setChannelData] = useState({
     A: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
     B: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
   })
   const [openBranches, setOpenBranches] = useState(new Set())
-  const [saving, setSaving]           = useState(false)
-  const [saved, setSaved]             = useState(false)
+  const [saving, setSaving]             = useState(false)
+  const [saved, setSaved]               = useState(false)
 
-  const current    = channelData[activeTab]
-  const dayMinRef  = useRef(current.dayMin)
-  const dayMaxRef  = useRef(current.dayMax)
-  useEffect(() => { dayMinRef.current = current.dayMin }, [current.dayMin])
-  useEffect(() => { dayMaxRef.current = current.dayMax }, [current.dayMax])
+  const current = channelData[activeTab]
 
   useEffect(() => {
     fetch('/api/notify-settings')
@@ -124,9 +164,18 @@ export default function NotifyModal({ branches, onClose }) {
       .catch(() => {})
   }, [branches])
 
+  const switchTab = useCallback((tab) => {
+    activeTabRef.current = tab
+    setActiveTab(tab)
+  }, [])
+
+  // activeTabRef 사용으로 탭 전환 시에도 재생성되지 않음
   const updateCurrent = useCallback((updater) => {
-    setChannelData(prev => ({ ...prev, [activeTab]: updater(prev[activeTab]) }))
-  }, [activeTab])
+    setChannelData(prev => {
+      const tab = activeTabRef.current
+      return { ...prev, [tab]: updater(prev[tab]) }
+    })
+  }, [])
 
   const toggleBranch = useCallback((branchId) => {
     setOpenBranches(prev => {
@@ -164,25 +213,31 @@ export default function NotifyModal({ branches, onClose }) {
     updateCurrent(ch => ({ ...ch, dayMax: ch.dayMax.map((v, i) => i === idx ? val : v) }))
   }, [updateCurrent])
 
+  // prev 안에서 직접 ch.dayMin/dayMax를 읽어 ref 불필요
   const toggleCustom = useCallback((id) => {
-    updateCurrent(ch => {
+    setChannelData(prev => {
+      const tab = activeTabRef.current
+      const ch = prev[tab]
       const nextOpenCustom = new Set(ch.openCustom)
       if (nextOpenCustom.has(id)) {
         nextOpenCustom.delete(id)
         const { [id]: _, ...restSettings } = ch.themeSettings
-        return { ...ch, openCustom: nextOpenCustom, themeSettings: restSettings }
+        return { ...prev, [tab]: { ...ch, openCustom: nextOpenCustom, themeSettings: restSettings } }
       }
       nextOpenCustom.add(id)
       return {
-        ...ch,
-        openCustom: nextOpenCustom,
-        themeSettings: {
-          ...ch.themeSettings,
-          [id]: { dayMin: [...dayMinRef.current], dayMax: [...dayMaxRef.current] },
+        ...prev,
+        [tab]: {
+          ...ch,
+          openCustom: nextOpenCustom,
+          themeSettings: {
+            ...ch.themeSettings,
+            [id]: { dayMin: [...ch.dayMin], dayMax: [...ch.dayMax] },
+          },
         },
       }
     })
-  }, [updateCurrent])
+  }, [])
 
   const setThemeDayMin = useCallback((themeId, idx, val) => {
     updateCurrent(ch => ({
@@ -204,7 +259,7 @@ export default function NotifyModal({ branches, onClose }) {
     }))
   }, [updateCurrent])
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setSaving(true)
     const buildPayload = (ch, suffix) => {
       const k = suffix ? `_${suffix}` : ''
@@ -213,11 +268,11 @@ export default function NotifyModal({ branches, onClose }) {
         if (ch.themeSettings[id]) filteredSettings[id] = ch.themeSettings[id]
       }
       return {
-        [`NOTIFY_DAY_MIN${k}`]:          ch.dayMin.join(','),
-        [`NOTIFY_DAY_MAX${k}`]:          ch.dayMax.join(','),
-        [`NOTIFY_THEMES${k}`]:           [...ch.notifyThemes].join(','),
-        [`NOTIFY_DISABLED_THEMES${k}`]:  allIds.filter(id => !ch.notifyThemes.has(id)).join(','),
-        [`NOTIFY_THEME_SETTINGS${k}`]:   JSON.stringify(filteredSettings),
+        [`NOTIFY_DAY_MIN${k}`]:         ch.dayMin.join(','),
+        [`NOTIFY_DAY_MAX${k}`]:         ch.dayMax.join(','),
+        [`NOTIFY_THEMES${k}`]:          [...ch.notifyThemes].join(','),
+        [`NOTIFY_DISABLED_THEMES${k}`]: allIds.filter(id => !ch.notifyThemes.has(id)).join(','),
+        [`NOTIFY_THEME_SETTINGS${k}`]:  JSON.stringify(filteredSettings),
       }
     }
     await fetch('/api/notify-settings', {
@@ -231,7 +286,7 @@ export default function NotifyModal({ branches, onClose }) {
     setSaving(false)
     setSaved(true)
     setTimeout(() => { setSaved(false); onClose() }, 800)
-  }
+  }, [channelData, allIds, onClose])
 
   const handleBackdropClick = useCallback((e) => {
     if (e.target === e.currentTarget) onClose()
@@ -250,7 +305,7 @@ export default function NotifyModal({ branches, onClose }) {
             <button
               key={tab}
               className={`modal-tab${activeTab === tab ? ' active' : ''}`}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => switchTab(tab)}
             >
               {tab}채널
             </button>
@@ -272,7 +327,7 @@ export default function NotifyModal({ branches, onClose }) {
           <section className="modal-section">
             <div className="modal-section-header">
               <h3 className="modal-section-title">알림 테마</h3>
-              <button className="modal-disable-all-btn" onClick={disableAll}>모든 알람 해제</button>
+              <button className="modal-disable-all-btn" onClick={disableAll}>{activeTab}채널 알림 초기화</button>
             </div>
             {branches.map(branch => {
               const ids = branch.themes.map(t => t.id)
@@ -292,42 +347,20 @@ export default function NotifyModal({ branches, onClose }) {
                   </button>
                   {isOpen && (
                     <div className="modal-themes">
-                      {branch.themes.map(theme => {
-                        const isCustomOpen = current.openCustom.has(theme.id)
-                        const customDayMin = current.themeSettings[theme.id]?.dayMin ?? current.dayMin
-                        const customDayMax = current.themeSettings[theme.id]?.dayMax ?? current.dayMax
-                        return (
-                          <div key={theme.id} className="modal-theme-row">
-                            <div className="modal-theme-row-header">
-                              <label className="modal-theme-toggle">
-                                <input
-                                  type="checkbox"
-                                  checked={current.notifyThemes.has(theme.id)}
-                                  onChange={() => toggleTheme(theme.id)}
-                                />
-                                {theme.emoji} {theme.name}
-                              </label>
-                              <button
-                                className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
-                                onClick={() => toggleCustom(theme.id)}
-                                title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
-                              >
-                                {isCustomOpen ? '커스텀 ✕' : '커스텀'}
-                              </button>
-                            </div>
-                            {isCustomOpen && (
-                              <div className="modal-theme-custom">
-                                <DayRangeList
-                                  dayMin={customDayMin}
-                                  dayMax={customDayMax}
-                                  onChangeMin={(idx, v) => setThemeDayMin(theme.id, idx, v)}
-                                  onChangeMax={(idx, v) => setThemeDayMax(theme.id, idx, v)}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
+                      {branch.themes.map(theme => (
+                        <ThemeRow
+                          key={theme.id}
+                          theme={theme}
+                          isChecked={current.notifyThemes.has(theme.id)}
+                          isCustomOpen={current.openCustom.has(theme.id)}
+                          customDayMin={current.themeSettings[theme.id]?.dayMin ?? current.dayMin}
+                          customDayMax={current.themeSettings[theme.id]?.dayMax ?? current.dayMax}
+                          toggleTheme={toggleTheme}
+                          toggleCustom={toggleCustom}
+                          setThemeDayMin={setThemeDayMin}
+                          setThemeDayMax={setThemeDayMax}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
