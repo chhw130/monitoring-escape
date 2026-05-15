@@ -145,6 +145,7 @@ export default function NotifyModal({ branches, onClose }) {
   const [channelData, setChannelData] = useState({
     A: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
     B: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
+    C: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
   })
   const [openBranches, setOpenBranches] = useState(new Set())
   const [saving, setSaving]             = useState(false)
@@ -159,6 +160,7 @@ export default function NotifyModal({ branches, onClose }) {
         setChannelData({
           A: parseChannelData(data, null, allIds),
           B: parseChannelData(data, 'B', allIds),
+          C: parseChannelData(data, 'C', allIds),
         })
       })
       .catch(() => {})
@@ -281,6 +283,7 @@ export default function NotifyModal({ branches, onClose }) {
       body: JSON.stringify({
         ...buildPayload(channelData.A, null),
         ...buildPayload(channelData.B, 'B'),
+        ...buildPayload(channelData.C, 'C'),
       }),
     }).catch(console.error)
     setSaving(false)
@@ -301,7 +304,7 @@ export default function NotifyModal({ branches, onClose }) {
         </div>
 
         <div className="modal-tabs">
-          {['A', 'B'].map(tab => (
+          {['A', 'B', 'C'].map(tab => (
             <button
               key={tab}
               className={`modal-tab${activeTab === tab ? ' active' : ''}`}

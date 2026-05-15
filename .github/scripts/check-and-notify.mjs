@@ -17,6 +17,14 @@ const channels = [
     themeSettings: JSON.parse(process.env.NOTIFY_THEME_SETTINGS_B || '{}'),
     label:         'B',
   },
+  {
+    webhook:       process.env.DISCORD_WEBHOOK_URL_C,
+    themes:        new Set((process.env.NOTIFY_THEMES_C || '').split(',').map(s => s.trim()).filter(Boolean)),
+    dayMin:        (process.env.NOTIFY_DAY_MIN_C || '0,17,17,17,17,17,0').split(',').map(Number),
+    dayMax:        (process.env.NOTIFY_DAY_MAX_C || '24,24,24,24,24,24,24').split(',').map(Number),
+    themeSettings: JSON.parse(process.env.NOTIFY_THEME_SETTINGS_C || '{}'),
+    label:         'C',
+  },
 ].filter(ch => ch.webhook && ch.themes.size > 0)
 
 function isTimeAllowed(dateStr, timeStr, themeId, ch) {

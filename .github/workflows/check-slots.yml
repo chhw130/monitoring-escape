@@ -23,4 +23,9 @@ jobs:
           NOTIFY_DAY_MAX_B:            ${{ vars.NOTIFY_DAY_MAX_B || '24,24,24,24,24,24,24' }}
           NOTIFY_THEMES_B:             ${{ vars.NOTIFY_THEMES_B || '' }}
           NOTIFY_THEME_SETTINGS_B:     ${{ vars.NOTIFY_THEME_SETTINGS_B || '{}' }}
+          DISCORD_WEBHOOK_URL_C:       ${{ secrets.DISCORD_WEBHOOK_URL_C }}
+          NOTIFY_DAY_MIN_C:            ${{ vars.NOTIFY_DAY_MIN_C || '0,17,17,17,17,17,0' }}
+          NOTIFY_DAY_MAX_C:            ${{ vars.NOTIFY_DAY_MAX_C || '24,24,24,24,24,24,24' }}
+          NOTIFY_THEMES_C:             ${{ vars.NOTIFY_THEMES_C || '' }}
+          NOTIFY_THEME_SETTINGS_C:     ${{ vars.NOTIFY_THEME_SETTINGS_C || '{}' }}
         run: node .github/scripts/check-and-notify.mjs
