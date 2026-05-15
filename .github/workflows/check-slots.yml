@@ -12,10 +12,15 @@ jobs:
 
       - name: Check slots and notify
         env:
-          SITE_URL:             ${{ secrets.SITE_URL }}
-          DISCORD_WEBHOOK_URL:  ${{ secrets.DISCORD_WEBHOOK_URL }}
-          NOTIFY_DAY_MIN:           ${{ vars.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0' }}
-          NOTIFY_DAY_MAX:           ${{ vars.NOTIFY_DAY_MAX || '24,24,24,24,24,24,24' }}
-          NOTIFY_THEMES:            ${{ vars.NOTIFY_THEMES || 'tutu,ayako,goerok' }}
-          NOTIFY_THEME_SETTINGS:    ${{ vars.NOTIFY_THEME_SETTINGS || '{}' }}
+          SITE_URL:                    ${{ secrets.SITE_URL }}
+          DISCORD_WEBHOOK_URL:         ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_WEBHOOK_URL_B:       ${{ secrets.DISCORD_WEBHOOK_URL_B }}
+          NOTIFY_DAY_MIN:              ${{ vars.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0' }}
+          NOTIFY_DAY_MAX:              ${{ vars.NOTIFY_DAY_MAX || '24,24,24,24,24,24,24' }}
+          NOTIFY_THEMES:               ${{ vars.NOTIFY_THEMES || 'tutu,ayako,goerok' }}
+          NOTIFY_THEME_SETTINGS:       ${{ vars.NOTIFY_THEME_SETTINGS || '{}' }}
+          NOTIFY_DAY_MIN_B:            ${{ vars.NOTIFY_DAY_MIN_B || '0,17,17,17,17,17,0' }}
+          NOTIFY_DAY_MAX_B:            ${{ vars.NOTIFY_DAY_MAX_B || '24,24,24,24,24,24,24' }}
+          NOTIFY_THEMES_B:             ${{ vars.NOTIFY_THEMES_B || '' }}
+          NOTIFY_THEME_SETTINGS_B:     ${{ vars.NOTIFY_THEME_SETTINGS_B || '{}' }}
         run: node .github/scripts/check-and-notify.mjs
