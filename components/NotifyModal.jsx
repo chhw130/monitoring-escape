@@ -195,7 +195,14 @@ export default function NotifyModal({ branches, onClose }) {
   const toggleTheme = useCallback((id) => {
     updateCurrent(ch => {
       const next = new Set(ch.notifyThemes)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+        const nextOpenCustom = new Set(ch.openCustom)
+        nextOpenCustom.delete(id)
+        const { [id]: _, ...restSettings } = ch.themeSettings
+        return { ...ch, notifyThemes: next, openCustom: nextOpenCustom, themeSettings: restSettings }
+      }
+      next.add(id)
       return { ...ch, notifyThemes: next }
     })
   }, [updateCurrent])
