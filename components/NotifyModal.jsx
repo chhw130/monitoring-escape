@@ -55,6 +55,7 @@ function parseChannelData(data, suffix, allIds) {
     notifyThemes,
     themeSettings,
     openCustom: new Set(Object.keys(themeSettings)),
+    disabled: data[`NOTIFY_CHANNEL_DISABLED${k}`] === 'true',
   }
 }
 
@@ -143,9 +144,9 @@ export default function NotifyModal({ branches, onClose }) {
   const [activeTab, setActiveTab] = useState('A')
 
   const [channelData, setChannelData] = useState({
-    A: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
-    B: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
-    C: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set() },
+    A: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set(), disabled: false },
+    B: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set(), disabled: false },
+    C: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set(), disabled: false },
   })
   const [openBranches, setOpenBranches] = useState(new Set())
   const [saving, setSaving]             = useState(false)
@@ -270,11 +271,12 @@ export default function NotifyModal({ branches, onClose }) {
         if (ch.themeSettings[id]) filteredSettings[id] = ch.themeSettings[id]
       }
       return {
-        [`NOTIFY_DAY_MIN${k}`]:         ch.dayMin.join(','),
-        [`NOTIFY_DAY_MAX${k}`]:         ch.dayMax.join(','),
-        [`NOTIFY_THEMES${k}`]:          [...ch.notifyThemes].join(','),
-        [`NOTIFY_DISABLED_THEMES${k}`]: allIds.filter(id => !ch.notifyThemes.has(id)).join(','),
-        [`NOTIFY_THEME_SETTINGS${k}`]:  JSON.stringify(filteredSettings),
+        [`NOTIFY_DAY_MIN${k}`]:          ch.dayMin.join(','),
+        [`NOTIFY_DAY_MAX${k}`]:          ch.dayMax.join(','),
+        [`NOTIFY_THEMES${k}`]:           [...ch.notifyThemes].join(','),
+        [`NOTIFY_DISABLED_THEMES${k}`]:  allIds.filter(id => !ch.notifyThemes.has(id)).join(','),
+        [`NOTIFY_THEME_SETTINGS${k}`]:   JSON.stringify(filteredSettings),
+        [`NOTIFY_CHANNEL_DISABLED${k}`]: ch.disabled ? 'true' : 'false',
       }
     }
     await fetch('/api/notify-settings', {
@@ -307,15 +309,28 @@ export default function NotifyModal({ branches, onClose }) {
           {['A', 'B', 'C'].map(tab => (
             <button
               key={tab}
-              className={`modal-tab${activeTab === tab ? ' active' : ''}`}
+              className={`modal-tab${activeTab === tab ? ' active' : ''}${channelData[tab].disabled ? ' disabled-tab' : ''}`}
               onClick={() => switchTab(tab)}
             >
               {tab}채널
+              {channelData[tab].disabled && <span className="modal-tab-off">OFF</span>}
             </button>
           ))}
         </div>
 
-        <div className="modal-body">
+        <div className={`modal-body${current.disabled ? ' modal-body-disabled' : ''}`}>
+          <div className="modal-channel-toggle-row">
+            <span className="modal-channel-toggle-label">
+              {activeTab}채널 알림
+            </span>
+            <button
+              className={`modal-channel-toggle-btn${current.disabled ? '' : ' on'}`}
+              onClick={() => updateCurrent(ch => ({ ...ch, disabled: !ch.disabled }))}
+            >
+              {current.disabled ? 'OFF' : 'ON'}
+            </button>
+          </div>
+
           <section className="modal-section">
             <h3 className="modal-section-title">기본 알림 시간대</h3>
             <p className="modal-section-hint">테마 커스텀 설정이 없으면 이 기준이 적용됩니다.</p>

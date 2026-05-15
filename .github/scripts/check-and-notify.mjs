@@ -7,6 +7,7 @@ const channels = [
     dayMin:        (process.env.NOTIFY_DAY_MIN || '0,17,17,17,17,17,0').split(',').map(Number),
     dayMax:        (process.env.NOTIFY_DAY_MAX || '24,24,24,24,24,24,24').split(',').map(Number),
     themeSettings: JSON.parse(process.env.NOTIFY_THEME_SETTINGS || '{}'),
+    disabled:      process.env.NOTIFY_CHANNEL_DISABLED === 'true',
     label:         'A',
   },
   {
@@ -15,6 +16,7 @@ const channels = [
     dayMin:        (process.env.NOTIFY_DAY_MIN_B || '0,17,17,17,17,17,0').split(',').map(Number),
     dayMax:        (process.env.NOTIFY_DAY_MAX_B || '24,24,24,24,24,24,24').split(',').map(Number),
     themeSettings: JSON.parse(process.env.NOTIFY_THEME_SETTINGS_B || '{}'),
+    disabled:      process.env.NOTIFY_CHANNEL_DISABLED_B === 'true',
     label:         'B',
   },
   {
@@ -23,9 +25,10 @@ const channels = [
     dayMin:        (process.env.NOTIFY_DAY_MIN_C || '0,17,17,17,17,17,0').split(',').map(Number),
     dayMax:        (process.env.NOTIFY_DAY_MAX_C || '24,24,24,24,24,24,24').split(',').map(Number),
     themeSettings: JSON.parse(process.env.NOTIFY_THEME_SETTINGS_C || '{}'),
+    disabled:      process.env.NOTIFY_CHANNEL_DISABLED_C === 'true',
     label:         'C',
   },
-].filter(ch => ch.webhook && ch.themes.size > 0)
+].filter(ch => ch.webhook && ch.themes.size > 0 && !ch.disabled)
 
 function isTimeAllowed(dateStr, timeStr, themeId, ch) {
   const dow    = new Date(dateStr + 'T00:00:00').getDay()

@@ -28,4 +28,7 @@ jobs:
           NOTIFY_DAY_MAX_C:            ${{ vars.NOTIFY_DAY_MAX_C || '24,24,24,24,24,24,24' }}
           NOTIFY_THEMES_C:             ${{ vars.NOTIFY_THEMES_C || '' }}
           NOTIFY_THEME_SETTINGS_C:     ${{ vars.NOTIFY_THEME_SETTINGS_C || '{}' }}
+          NOTIFY_CHANNEL_DISABLED:     ${{ vars.NOTIFY_CHANNEL_DISABLED || 'false' }}
+          NOTIFY_CHANNEL_DISABLED_B:   ${{ vars.NOTIFY_CHANNEL_DISABLED_B || 'false' }}
+          NOTIFY_CHANNEL_DISABLED_C:   ${{ vars.NOTIFY_CHANNEL_DISABLED_C || 'false' }}
         run: node .github/scripts/check-and-notify.mjs

@@ -70,6 +70,54 @@
 }
 .modal-tab:hover { color: #1e2a3b; }
 .modal-tab.active { color: #0284c7; border-bottom-color: #0284c7; }
+.modal-tab.disabled-tab { color: #cbd5e1; }
+.modal-tab.disabled-tab.active { color: #94a3b8; border-bottom-color: #94a3b8; }
+
+.modal-tab-off {
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.modal-channel-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid #edf1f9;
+}
+
+.modal-channel-toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e2a3b;
+}
+
+.modal-channel-toggle-btn {
+  width: 52px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: #e2e8f0;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+  letter-spacing: 0.3px;
+}
+.modal-channel-toggle-btn.on { background: #0284c7; color: #fff; }
+
+.modal-body-disabled .modal-section {
+  opacity: 0.35;
+  pointer-events: none;
+  user-select: none;
+}
 
 .modal-body {
   overflow-y: auto;
