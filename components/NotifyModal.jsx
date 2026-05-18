@@ -40,7 +40,7 @@ function parseChannelData(data, suffix, allIds) {
   try {
     const parsed = JSON.parse(data[`NOTIFY_THEME_SETTINGS${k}`] ?? '{}')
     for (const [id, cfg] of Object.entries(parsed)) {
-      if (Array.isArray(cfg.dayMin) && cfg.dayMin.length === 7) {
+      if (notifyThemes.has(id) && Array.isArray(cfg.dayMin) && cfg.dayMin.length === 7) {
         themeSettings[id] = {
           dayMin: cfg.dayMin,
           dayMax: Array.isArray(cfg.dayMax) && cfg.dayMax.length === 7 ? cfg.dayMax : [...DEFAULT_DAY_MAX],
@@ -115,13 +115,15 @@ const ThemeRow = memo(function ThemeRow({
           <input type="checkbox" checked={isChecked} onChange={handleToggle} />
           {theme.emoji} {theme.name}
         </label>
-        <button
-          className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
-          onClick={handleToggleCustom}
-          title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
-        >
-          {isCustomOpen ? '커스텀 ✕' : '커스텀'}
-        </button>
+        {isChecked && (
+          <button
+            className={`modal-custom-btn${isCustomOpen ? ' active' : ''}`}
+            onClick={handleToggleCustom}
+            title={isCustomOpen ? '커스텀 설정 제거' : '개별 시간 설정'}
+          >
+            {isCustomOpen ? '커스텀 ✕' : '커스텀'}
+          </button>
+        )}
       </div>
       {isCustomOpen && (
         <div className="modal-theme-custom">
@@ -275,7 +277,7 @@ export default function NotifyModal({ branches, onClose }) {
       const k = suffix ? `_${suffix}` : ''
       const filteredSettings = {}
       for (const id of ch.openCustom) {
-        if (ch.themeSettings[id]) filteredSettings[id] = ch.themeSettings[id]
+        if (ch.themeSettings[id] && ch.notifyThemes.has(id)) filteredSettings[id] = ch.themeSettings[id]
       }
       return {
         [`NOTIFY_DAY_MIN${k}`]:          ch.dayMin.join(','),
