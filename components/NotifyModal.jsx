@@ -26,12 +26,9 @@ function parseChannelData(data, suffix, allIds) {
   const disabledList = (data[`NOTIFY_DISABLED_THEMES${k}`] ?? '').split(',').map(str => str.trim()).filter(Boolean)
 
   let notifyThemes
-  if (disabledList.length > 0) {
-    const disabled = new Set(disabledList)
-    notifyThemes = new Set(allIds.filter(id => !disabled.has(id)))
-  } else if (data[`NOTIFY_THEMES${k}`]) {
-    const oldEnabled = new Set(data[`NOTIFY_THEMES${k}`].split(',').map(str => str.trim()).filter(Boolean))
-    notifyThemes = new Set(allIds.filter(id => oldEnabled.has(id)))
+  if (disabledList.length > 0 || data[`NOTIFY_THEMES${k}`]) {
+    const enabled = new Set((data[`NOTIFY_THEMES${k}`] || '').split(',').map(s => s.trim()).filter(Boolean))
+    notifyThemes = new Set(allIds.filter(id => enabled.has(id)))
   } else {
     notifyThemes = new Set(allIds)
   }
