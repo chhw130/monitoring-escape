@@ -7,14 +7,16 @@ export const maxDuration = 30  // Vercel 최대 실행 시간 30초
 async function fetchEnabledThemeIds() {
   const token = process.env.GH_PAT
   const repo  = process.env.GH_REPO
+  const vars  = ['NOTIFY_THEMES', 'NOTIFY_THEMES_B', 'NOTIFY_THEMES_C']
   try {
-    const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/variables/NOTIFY_THEMES`,
-      { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } }
+    const results = await Promise.all(
+      vars.map(name =>
+        fetch(`https://api.github.com/repos/${repo}/actions/variables/${name}`, {
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+        }).then(r => r.ok ? r.json().then(d => d.value) : '').catch(() => '')
+      )
     )
-    if (!res.ok) { return [] }
-    const data = await res.json()
-    return data.value.split(',').map(s => s.trim()).filter(Boolean)
+    return [...new Set(results.flatMap(v => v.split(',').map(s => s.trim()).filter(Boolean)))]
   } catch {
     return []
   }
