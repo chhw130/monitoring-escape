@@ -38,17 +38,24 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
     <div className="theme-card">
       <div className="card-head">
         <div className="card-title-row">
-          <span className="theme-emoji">{theme.emoji}</span>
-          <div>
-            <h2 className="theme-name">{theme.name}</h2>
-            {checkedAt && (
-              <p className="last-check">
-                {new Date(checkedAt).toLocaleTimeString('ko-KR', {
-                  hour: '2-digit', minute: '2-digit', second: '2-digit',
-                })} 확인
-              </p>
-            )}
-          </div>
+          <a
+            href={theme.reserveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="theme-title-link"
+          >
+            <span className="theme-emoji">{theme.emoji}</span>
+            <div>
+              <h2 className="theme-name">{theme.name}</h2>
+              {checkedAt && (
+                <p className="last-check">
+                  {new Date(checkedAt).toLocaleTimeString('ko-KR', {
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                  })} 확인
+                </p>
+              )}
+            </div>
+          </a>
         </div>
         <div className="card-head-right">
           <span className="status-badge" style={{

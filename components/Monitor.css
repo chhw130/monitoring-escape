@@ -290,9 +290,20 @@
   align-items: center;
   gap: 10px;
 }
-.theme-emoji { font-size: 22px; line-height: 1; }
-.theme-name  { font-size: 15px; font-weight: 700; color: #1e2a3b; }
+.theme-emoji { font-size: 22px; line-height: 1; transition: transform .2s; }
+.theme-name  { font-size: 15px; font-weight: 700; color: #1e2a3b; transition: color .15s; }
 .last-check  { font-size: 11px; color: #b0bdd4; margin-top: 3px; }
+
+.theme-title-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+}
+.theme-title-link:hover .theme-name  { color: #0284c7; text-decoration: underline; }
+.theme-title-link:hover .theme-emoji { transform: scale(1.15); }
 
 .card-head-right {
   display: flex;
