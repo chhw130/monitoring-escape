@@ -50,8 +50,9 @@ async function fetchRankedThemes() {
     }
 
     const branchBrandMap = Object.fromEntries(ALL_BRANCHES.map((b: any) => [b.id, b.brand]))
+    const branchLocationMap = Object.fromEntries(ALL_BRANCHES.map((b: any) => [b.id, b.location]))
     const seen = new Set<string>()
-    const matched: { themeId: string; themeName: string; themeEmoji: string; branchId: string; branch: string; score: number }[] = []
+    const matched: { themeId: string; themeName: string; themeEmoji: string; branchId: string; branch: string; location: string; score: number }[] = []
 
     for (const row of rows) {
       const normalizedColory = normalizeTheme(row.theme)
@@ -66,7 +67,7 @@ async function fetchRankedThemes() {
             ? normalizedColory.includes('피노키오')
             : normalizedColory.includes(normalizedOurs) || normalizedOurs.includes(normalizedColory)
         if (nameMatches) {
-          matched.push({ themeId: theme.id, themeName: theme.name, themeEmoji: theme.emoji, branchId: theme.branchId, branch: theme.branch, score: row.score })
+          matched.push({ themeId: theme.id, themeName: theme.name, themeEmoji: theme.emoji, branchId: theme.branchId, branch: theme.branch, location: branchLocationMap[theme.branchId] || '', score: row.score })
           seen.add(theme.id)
           break
         }

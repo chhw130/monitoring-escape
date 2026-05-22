@@ -1,17 +1,26 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import './RankingSection.css'
 
 const MEDAL = ['🥇', '🥈', '🥉']
 const PAGE_SIZE = 10
 
-export default function RankingSection({ rankedThemes }) {
+export default function RankingSection({ rankedThemes, location }) {
   const [page, setPage] = useState(0)
-  if (!rankedThemes?.length) return null
 
-  const totalPages = Math.ceil(rankedThemes.length / PAGE_SIZE)
-  const pageItems = rankedThemes.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const filtered = useMemo(() => {
+    if (!rankedThemes?.length) return []
+    if (!location || location === '전체') return rankedThemes
+    return rankedThemes.filter(t => t.location === location)
+  }, [rankedThemes, location])
+
+  useEffect(() => { setPage(0) }, [location])
+
+  if (!filtered.length) return null
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const pageItems = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   return (
     <section className="ranking-section">

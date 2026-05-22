@@ -35,7 +35,6 @@ export default function MainPage({ branches, rankedThemes }) {
 
   return (
     <div className="main-page">
-      <RankingSection rankedThemes={rankedThemes} />
       <header className="main-header">
         <div>
           <h1 className="main-title">방탈출 예약 모니터</h1>
@@ -69,6 +68,8 @@ export default function MainPage({ branches, rankedThemes }) {
           onChange={e => setQuery(e.target.value)}
         />
       </div>
+
+      <RankingSection rankedThemes={rankedThemes} location={location} />
 
       {filtered.length === 0 ? (
         <p className="search-empty">조건에 맞는 지점이 없습니다.</p>
