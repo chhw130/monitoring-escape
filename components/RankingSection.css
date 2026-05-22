@@ -1,0 +1,103 @@
+.ranking-section {
+  margin-bottom: 36px;
+  background: #f8faff;
+  border: 1px solid #dde3f0;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.ranking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ranking-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e2a3b;
+  letter-spacing: -0.2px;
+}
+
+.ranking-source {
+  font-size: 11px;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color .15s;
+}
+.ranking-source:hover { color: #0284c7; }
+
+.ranking-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #dde3f0 transparent;
+}
+.ranking-scroll::-webkit-scrollbar { height: 4px; }
+.ranking-scroll::-webkit-scrollbar-track { background: transparent; }
+.ranking-scroll::-webkit-scrollbar-thumb { background: #dde3f0; border-radius: 2px; }
+
+.rank-card {
+  flex-shrink: 0;
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #ffffff;
+  border: 1px solid #dde3f0;
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.rank-card:hover {
+  border-color: #7dd3fc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(14,42,80,0.08);
+}
+
+.rank-pos-1 { border-color: #fbbf24; background: #fffbeb; }
+.rank-pos-2 { border-color: #94a3b8; background: #f8fafc; }
+.rank-pos-3 { border-color: #b45309; background: #fff7ed; }
+.rank-pos-1:hover { border-color: #f59e0b; }
+.rank-pos-2:hover { border-color: #64748b; }
+.rank-pos-3:hover { border-color: #92400e; }
+
+.rank-badge {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.rank-emoji {
+  font-size: 22px;
+  line-height: 1;
+  margin: 2px 0;
+}
+
+.rank-theme-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e2a3b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-branch {
+  font-size: 11px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-score {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0284c7;
+  margin-top: 2px;
+}

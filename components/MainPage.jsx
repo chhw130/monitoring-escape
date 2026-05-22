@@ -2,9 +2,10 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import NotifyModal from './NotifyModal'
+import RankingSection from './RankingSection'
 import './MainPage.css'
 
-export default function MainPage({ branches }) {
+export default function MainPage({ branches, rankedThemes }) {
   const [query, setQuery]         = useState('')
   const [location, setLocation]   = useState('전체')
   const [modalOpen, setModalOpen] = useState(false)
@@ -34,6 +35,7 @@ export default function MainPage({ branches }) {
 
   return (
     <div className="main-page">
+      <RankingSection rankedThemes={rankedThemes} />
       <header className="main-header">
         <div>
           <h1 className="main-title">방탈출 예약 모니터</h1>
