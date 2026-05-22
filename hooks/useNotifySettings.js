@@ -1,20 +1,28 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
+
+const SUFFIXES = ['', '_B', '_C']
+
+function getChannelEnabledSet(data, suffix, allIds) {
+  const channelThemesStr = data[`NOTIFY_THEMES${suffix}`]
+  if (!channelThemesStr) return new Set()
+
+  const channelThemeIds = new Set(channelThemesStr.split(',').map(s => s.trim()).filter(Boolean))
+  const baseEnabled = new Set(allIds.filter(id => channelThemeIds.has(id)))
+
+  const disabledSet = new Set(
+    (data[`NOTIFY_DISABLED_THEMES${suffix}`] ?? '').split(',').map(s => s.trim()).filter(Boolean)
+  )
+  return new Set([...baseEnabled].filter(id => !disabledSet.has(id)))
+}
 
 function parseEnabledThemeIds(data, allIds) {
-  const disabledList = (data.NOTIFY_DISABLED_THEMES ?? '')
-    .split(',').map(s => s.trim()).filter(Boolean)
-
-  if (disabledList.length > 0) {
-    const disabledSet = new Set(disabledList)
-    return new Set(allIds.filter(id => !disabledSet.has(id)))
+  const combined = new Set()
+  for (const suffix of SUFFIXES) {
+    for (const id of getChannelEnabledSet(data, suffix, allIds)) {
+      combined.add(id)
+    }
   }
-
-  if (data.NOTIFY_THEMES) {
-    const enabledSet = new Set(data.NOTIFY_THEMES.split(',').map(s => s.trim()).filter(Boolean))
-    return new Set(allIds.filter(id => enabledSet.has(id)))
-  }
-
-  return new Set()
+  return combined
 }
 
 export function useNotifySettings(themes) {
@@ -37,27 +45,5 @@ export function useNotifySettings(themes) {
       .finally(() => setIsLoaded(true))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const toggleThemeNotify = useCallback((themeId) => {
-    const prev = notifyThemesRef.current
-    const next = new Set(prev)
-    if (next.has(themeId)) {
-      next.delete(themeId)
-    } else {
-      next.add(themeId)
-    }
-    notifyThemesRef.current = next
-    setNotifyThemes(next)
-
-    const disabledIds = themes.map(t => t.id).filter(id => !next.has(id))
-    fetch('/api/notify-settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        NOTIFY_DISABLED_THEMES: disabledIds.join(','),
-        NOTIFY_THEMES:          [...next].join(','),
-      }),
-    }).catch(console.error)
-  }, [themes])
-
-  return { notifyThemes, notifyThemesRef, isLoaded, toggleThemeNotify }
+  return { notifyThemes, notifyThemesRef, isLoaded }
 }

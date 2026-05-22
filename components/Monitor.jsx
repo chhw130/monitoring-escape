@@ -11,7 +11,7 @@ import './Monitor.css'
 
 function MonitorInner({ branchName, themes }) {
   const { localTimeRange, handleRangeChange, handleReset, isDefault } = useTimeRangeParams()
-  const { notifyThemes, notifyThemesRef, isLoaded, toggleThemeNotify } = useNotifySettings(themes)
+  const { notifyThemes, notifyThemesRef, isLoaded } = useNotifySettings(themes)
   const { slotsByTheme, loadingByTheme, isPolling, lastPolledAt, refreshAll, refreshCallbacks } = useThemeSlots(themes, notifyThemesRef, isLoaded)
 
   const totalAvailableDates = useMemo(() =>
@@ -53,7 +53,6 @@ function MonitorInner({ branchName, themes }) {
             onRefresh={refreshCallbacks[theme.id]}
             timeRange={localTimeRange}
             notifyEnabled={notifyThemes.has(theme.id)}
-            onNotifyToggle={toggleThemeNotify}
           />
         ))}
       </div>
