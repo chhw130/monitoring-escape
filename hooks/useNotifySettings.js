@@ -26,12 +26,11 @@ function parseEnabledThemeIds(data, allIds) {
 }
 
 export function useNotifySettings(themes) {
-  const [notifyThemes, setNotifyThemes]     = useState(() => new Set(themes.map(t => t.id)))
-  const [isLoaded, setIsLoaded]             = useState(false)
-  const [togglingId, setTogglingId]         = useState(null)
-  const notifyThemesRef                     = useRef(new Set())
+  const [notifyThemes, setNotifyThemes] = useState(() => new Set(themes.map(t => t.id)))
+  const [isLoaded, setIsLoaded]         = useState(false)
+  const notifyThemesRef                 = useRef(new Set())
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch('/api/notify-settings')
       .then(r => r.json())
       .then(data => {
@@ -46,45 +45,7 @@ export function useNotifySettings(themes) {
       .finally(() => setIsLoaded(true))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const toggleTheme = useCallback(async (themeId) => {
-    const enable = !notifyThemesRef.current.has(themeId)
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-    // 낙관적 업데이트
-    const optimistic = new Set(notifyThemesRef.current)
-    enable ? optimistic.add(themeId) : optimistic.delete(themeId)
-    notifyThemesRef.current = optimistic
-    setNotifyThemes(new Set(optimistic))
-    setTogglingId(themeId)
-
-    try {
-      const res  = await fetch('/api/notify-settings')
-      const data = await res.json()
-
-      const payload = {}
-      for (const suffix of SUFFIXES) {
-        const themes  = new Set((data[`NOTIFY_THEMES${suffix}`]          || '').split(',').map(s => s.trim()).filter(Boolean))
-        const disabled = new Set((data[`NOTIFY_DISABLED_THEMES${suffix}`] || '').split(',').map(s => s.trim()).filter(Boolean))
-        if (enable) { themes.add(themeId); disabled.delete(themeId) }
-        else        { themes.delete(themeId); disabled.add(themeId) }
-        payload[`NOTIFY_THEMES${suffix}`]          = [...themes].join(',')
-        payload[`NOTIFY_DISABLED_THEMES${suffix}`] = [...disabled].join(',')
-      }
-
-      await fetch('/api/notify-settings', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      })
-    } catch {
-      // 실패 시 롤백
-      const reverted = new Set(notifyThemesRef.current)
-      enable ? reverted.delete(themeId) : reverted.add(themeId)
-      notifyThemesRef.current = reverted
-      setNotifyThemes(new Set(reverted))
-    } finally {
-      setTogglingId(null)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  return { notifyThemes, notifyThemesRef, isLoaded, toggleTheme, togglingId }
+  return { notifyThemes, notifyThemesRef, isLoaded, refetch: load }
 }

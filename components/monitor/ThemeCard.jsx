@@ -1,4 +1,5 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
+import ThemeNotifyModal from './ThemeNotifyModal'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -7,7 +8,8 @@ function formatDate(dateStr) {
   return { short: `${d.getMonth() + 1}/${d.getDate()}`, dow: WEEKDAYS[d.getDay()] }
 }
 
-const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled, onToggleNotify, toggling }) {
+const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled, onNotifySaved }) {
+  const [modalOpen, setModalOpen] = useState(false)
   const getDateUrl = (dateStr) => {
     const base = theme.reserveUrl
     return base + (base.includes('?') ? '&' : '?') + 'date=' + dateStr
@@ -71,11 +73,10 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
           </span>
           <button
             className={`btn-notify${notifyEnabled ? ' active' : ''}`}
-            onClick={() => onToggleNotify?.(theme.id)}
-            disabled={toggling}
-            title={notifyEnabled ? '알림 끄기' : '알림 켜기'}
+            onClick={() => setModalOpen(true)}
+            title="알림 설정"
           >
-            {toggling ? <span className="spinner" /> : notifyEnabled ? '🔔' : '🔕'}
+            {notifyEnabled ? '🔔' : '🔕'}
           </button>
           <button className="btn-refresh" onClick={onRefresh} disabled={loading || !notifyEnabled} title={notifyEnabled ? '새로고침' : '알림이 꺼져 있습니다'}>
             {loading ? <span className="spinner" /> : '↻'}
@@ -141,6 +142,13 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
           </ul>
         )}
       </div>
+      {modalOpen && (
+        <ThemeNotifyModal
+          theme={theme}
+          onClose={() => setModalOpen(false)}
+          onSaved={onNotifySaved}
+        />
+      )}
     </div>
   )
 })
