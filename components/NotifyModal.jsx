@@ -142,6 +142,31 @@ export default function NotifyModal({ branches, onClose }) {
   const activeTabRef = useRef('A')
   const [activeTab, setActiveTab] = useState('A')
 
+  const [locationFilter, setLocationFilter] = useState('전체')
+  const [searchQuery, setSearchQuery]       = useState('')
+
+  const locations = useMemo(() => {
+    const seen = new Set()
+    const result = ['전체']
+    branches.forEach(b => { if (!seen.has(b.location)) { seen.add(b.location); result.push(b.location) } })
+    return result
+  }, [branches])
+
+  const filteredBranches = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    return branches.filter(b => {
+      if (locationFilter !== '전체' && b.location !== locationFilter) return false
+      if (!q) return true
+      return (
+        b.brand.toLowerCase().includes(q) ||
+        b.name.toLowerCase().includes(q) ||
+        b.themes.some(t => t.name.toLowerCase().includes(q))
+      )
+    })
+  }, [branches, locationFilter, searchQuery])
+
+  const isFiltering = locationFilter !== '전체' || searchQuery.trim() !== ''
+
   const [channelData, setChannelData] = useState({
     A: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set(), disabled: false },
     B: { dayMin: [...DEFAULT_DAY_MIN], dayMax: [...DEFAULT_DAY_MAX], notifyThemes: new Set(allIds), themeSettings: {}, openCustom: new Set(), disabled: false },
@@ -353,16 +378,41 @@ export default function NotifyModal({ branches, onClose }) {
               <h3 className="modal-section-title">알림 테마</h3>
               <button className="modal-disable-all-btn" onClick={disableAll}>{activeTab}채널 알림 초기화</button>
             </div>
-            {branches.map(branch => {
+
+            <div className="modal-filter-bar">
+              <div className="modal-location-chips">
+                {locations.map(loc => (
+                  <button
+                    key={loc}
+                    className={`modal-location-chip${locationFilter === loc ? ' active' : ''}`}
+                    onClick={() => setLocationFilter(loc)}
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+              <input
+                className="modal-search-input"
+                type="text"
+                placeholder="테마명 검색..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {filteredBranches.length === 0 ? (
+              <p className="modal-filter-empty">조건에 맞는 테마가 없습니다.</p>
+            ) : filteredBranches.map(branch => {
               const ids = branch.themes.map(t => t.id)
               const allChecked = ids.every(id => current.notifyThemes.has(id))
-              const isOpen = openBranches.has(branch.id)
+              const isOpen = isFiltering || openBranches.has(branch.id)
               return (
                 <div key={branch.id} className="modal-branch">
                   <button className="modal-branch-header" onClick={() => toggleBranch(branch.id)}>
                     <span className="modal-branch-name">
                       <span className={`modal-branch-chevron${isOpen ? ' open' : ''}`}>›</span>
                       {branch.brand} {branch.name}
+                      <span className="modal-branch-location">📍 {branch.location}</span>
                     </span>
                     <label className="modal-theme-toggle" onClick={e => e.stopPropagation()}>
                       <input type="checkbox" checked={allChecked} onChange={e => toggleAll(ids, e.target.checked)} />
