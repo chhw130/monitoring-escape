@@ -8,6 +8,7 @@ const AppHeader = memo(function AppHeader({ onRefreshAll, loading, lastAllCheck,
         <Link href="/" className="back-link">← 지점 목록</Link>
         <h1 className="app-title">{branchName}</h1>
         <p className="app-sub">{themeCount}개 테마 실시간 모니터링</p>
+        <p className="app-hint">🔔 각 테마 카드의 벨 버튼으로 Discord 알림을 설정할 수 있습니다</p>
       </div>
       <div className="header-right">
         <div className="header-btn-row">
