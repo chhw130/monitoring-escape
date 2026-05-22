@@ -7,7 +7,7 @@ function formatDate(dateStr) {
   return { short: `${d.getMonth() + 1}/${d.getDate()}`, dow: WEEKDAYS[d.getDay()] }
 }
 
-const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled }) {
+const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, timeRange, notifyEnabled, onToggleNotify, toggling }) {
   const getDateUrl = (dateStr) => {
     const base = theme.reserveUrl
     return base + (base.includes('?') ? '&' : '?') + 'date=' + dateStr
@@ -69,6 +69,14 @@ const ThemeCard = memo(function ThemeCard({ theme, data, onRefresh, loading, tim
             }} />
             {statusText}
           </span>
+          <button
+            className={`btn-notify${notifyEnabled ? ' active' : ''}`}
+            onClick={() => onToggleNotify?.(theme.id)}
+            disabled={toggling}
+            title={notifyEnabled ? '알림 끄기' : '알림 켜기'}
+          >
+            {toggling ? <span className="spinner" /> : notifyEnabled ? '🔔' : '🔕'}
+          </button>
           <button className="btn-refresh" onClick={onRefresh} disabled={loading || !notifyEnabled} title={notifyEnabled ? '새로고침' : '알림이 꺼져 있습니다'}>
             {loading ? <span className="spinner" /> : '↻'}
           </button>
