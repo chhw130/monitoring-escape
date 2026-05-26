@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node *)",
+      "Bash(xargs cat)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npm run *)",
+      "Bash(xargs ls -la)",
+      "Bash(git *)",
+      "WebFetch(domain:m.booking.naver.com)",
+      "WebFetch(domain:booking.naver.com)",
+      "Bash(curl -s https://m.booking.naver.com/graphql?opName=hourlySchedule -H 'accept: */*' -H 'content-type: application/json' -H 'origin: https://m.booking.naver.com' -H 'user-agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/148.0.0.0 Safari/537.36' --data-raw '{\"operationName\":\"hourlySchedule\",\"variables\":{\"scheduleParams\":{\"businessId\":\"1473904\",\"businessTypeId\":12,\"bizItemId\":\"6973906\",\"startDateTime\":\"2026-05-26T00:00:00+09:00\",\"endDateTime\":\"2026-05-26T00:00:00+09:00\"}},\"query\":\"query hourlySchedule\\($scheduleParams: ScheduleParams\\) {\\\\n  schedule\\(input: $scheduleParams\\) {\\\\n    bizItemSchedule {\\\\n      hourly {\\\\n        unitStartTime\\\\n        unitStock\\\\n        isUnitSaleDay\\\\n        saleStartDateTime\\\\n        saleEndDateTime\\\\n        __typename\\\\n      }\\\\n      __typename\\\\n    }\\\\n    __typename\\\\n  }\\\\n}\"}')",
+      "Bash(curl *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(nslookup doomescape.com)",
+      "Bash(nslookup www.doomescape.com)",
+      "WebSearch",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}
