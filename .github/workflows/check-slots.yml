@@ -10,6 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fetch Roomlescape slots (봇 차단 우회)
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: node .github/scripts/fetch-roomlescape-slots.mjs
+
       - name: Check slots and notify
         env:
           SITE_URL:                    ${{ secrets.SITE_URL }}
