@@ -13,6 +13,7 @@ const BRAND_STORE_MAP: Record<string, string[]> = {
   '룸이스케이프':     ['룸엘이스케이프'],
   '파노라마':        ['파노라마'],
   '채널27':          ['채널27'],
+  '넥스트에디션':     ['넥스트에디션'],
 }
 
 function normalizeTheme(name: string) {
