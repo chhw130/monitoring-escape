@@ -15,6 +15,7 @@ const BRAND_STORE_MAP: Record<string, string[]> = {
   '채널27':          ['채널27'],
   '넥스트에디션':     ['넥스트에디션'],
   '제로월드':         ['제로월드'],
+  '드림이스케이프':   ['드림이스케이프'],
 }
 
 function normalizeTheme(name: string) {
