@@ -2,7 +2,7 @@ import { ALL_BRANCHES, ALL_THEMES } from '@/lib/registry'
 import MainPage from '@/components/MainPage'
 
 const BRAND_STORE_MAP: Record<string, string[]> = {
-  '키이스케이프':     ['후즈데어', 'LOG_IN 1', 'LOG_IN 2'],
+  '키이스케이프':     ['후즈데어', 'LOG_IN 1', 'LOG_IN 2', '스테이션'],
   '프랭크':          ['프랭크'],
   '지구별방탈출':     ['지구별'],
   'play33':          ['플레이33'],
