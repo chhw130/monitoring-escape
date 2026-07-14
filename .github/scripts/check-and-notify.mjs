@@ -70,6 +70,10 @@ async function processChannel(ch) {
 
   const available = {}
   for (const [themeId, themeData] of Object.entries(data).filter(([id]) => ch.themes.has(id))) {
+    if (themeData.error) {
+      console.error(`[${ch.label}채널] [${themeId}] fetch 실패: ${themeData.error}`)
+      continue
+    }
     const filtered = {}
     for (const [date, times] of Object.entries(themeData.slots ?? {})) {
       const filteredTimes = times.filter(t => isTimeAllowed(date, t, themeId, ch))
@@ -92,12 +96,10 @@ async function processChannel(ch) {
   console.log(`[${ch.label}채널] 알림 전송 완료`)
 }
 
+// 일부 채널·테마가 실패해도 로그만 남기고 파이프라인은 성공 처리한다
 const results = await Promise.allSettled(channels.map(processChannel))
-let hasError = false
 for (const result of results) {
   if (result.status === 'rejected') {
     console.error(result.reason)
-    hasError = true
   }
 }
-if (hasError) process.exit(1)

@@ -43,7 +43,7 @@ export async function GET(req) {
       ? ALL_THEMES.filter(t => enabledIds.includes(t.id))
       : []
 
-    const results = await Promise.all(
+    const results = await Promise.allSettled(
       enabledThemes.map(async (theme) => {
         const themeDayMin = themeSettings[theme.id]?.dayMin
         const skipDows    = themeDayMin ? getDaysToSkip(themeDayMin) : globalSkipDows
@@ -52,10 +52,18 @@ export async function GET(req) {
       })
     )
 
-    const resultMap = Object.fromEntries(results)
-    for (const [id, data] of Object.entries(resultMap)) {
-      setCached(id, { theme_id: id, ...data })
-    }
+    const resultMap = {}
+    results.forEach((result, i) => {
+      const themeId = enabledThemes[i].id
+      if (result.status === 'fulfilled') {
+        const [id, data] = result.value
+        resultMap[id] = data
+        setCached(id, { theme_id: id, ...data })
+      } else {
+        console.error(`[${themeId}] fetch 실패:`, result.reason)
+        resultMap[themeId] = { error: result.reason?.message ?? String(result.reason) }
+      }
+    })
 
     return Response.json(resultMap)
   } catch (e) {
