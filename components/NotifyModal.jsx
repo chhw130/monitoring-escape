@@ -136,7 +136,9 @@ const ThemeRow = memo(function ThemeRow({
   )
 })
 
-export default function NotifyModal({ branches, onClose }) {
+export default function NotifyModal({ onClose }) {
+  // 메인 페이지는 페이지네이션된 목록만 받으므로 전체 지점은 여기서 직접 불러온다
+  const [branches, setBranches] = useState([])
   const allIds = useMemo(() => branches.flatMap(b => b.themes.map(t => t.id)), [branches])
 
   const activeTabRef = useRef('A')
@@ -179,17 +181,21 @@ export default function NotifyModal({ branches, onClose }) {
   const current = channelData[activeTab]
 
   useEffect(() => {
-    fetch('/api/notify-settings')
-      .then(r => r.json())
-      .then(data => {
+    Promise.all([
+      fetch('/api/branches').then(r => r.json()),
+      fetch('/api/notify-settings').then(r => r.json()).catch(() => ({})),
+    ])
+      .then(([branchList, settings]) => {
+        const ids = branchList.flatMap(b => b.themes.map(t => t.id))
+        setBranches(branchList)
         setChannelData({
-          A: parseChannelData(data, null, allIds),
-          B: parseChannelData(data, 'B', allIds),
-          C: parseChannelData(data, 'C', allIds),
+          A: parseChannelData(settings, null, ids),
+          B: parseChannelData(settings, 'B', ids),
+          C: parseChannelData(settings, 'C', ids),
         })
       })
       .catch(() => {})
-  }, [branches])
+  }, [])
 
   const switchTab = useCallback((tab) => {
     activeTabRef.current = tab
@@ -400,7 +406,9 @@ export default function NotifyModal({ branches, onClose }) {
               />
             </div>
 
-            {filteredBranches.length === 0 ? (
+            {branches.length === 0 ? (
+              <p className="modal-filter-empty">지점 목록을 불러오는 중...</p>
+            ) : filteredBranches.length === 0 ? (
               <p className="modal-filter-empty">조건에 맞는 테마가 없습니다.</p>
             ) : filteredBranches.map(branch => {
               const ids = branch.themes.map(t => t.id)
@@ -445,7 +453,8 @@ export default function NotifyModal({ branches, onClose }) {
 
         <div className="modal-footer">
           <button className="modal-cancel" onClick={onClose}>취소</button>
-          <button className="modal-save" onClick={handleSave} disabled={saving}>
+          {/* 지점 목록 로드 전 저장하면 빈 테마 목록으로 설정이 초기화되므로 막는다 */}
+          <button className="modal-save" onClick={handleSave} disabled={saving || branches.length === 0}>
             {saving ? '저장 중...' : saved ? '✓ 저장됨' : '저장'}
           </button>
         </div>

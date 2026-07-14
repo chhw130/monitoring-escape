@@ -1,4 +1,5 @@
 import { ALL_BRANCHES, ALL_THEMES } from '@/lib/registry'
+import { buildBranchList, filterBranches, paginateBranches } from '@/lib/branchCatalog'
 import MainPage from '@/components/MainPage'
 
 const BRAND_STORE_MAP: Record<string, string[]> = {
@@ -83,18 +84,33 @@ async function fetchRankedThemes() {
   }
 }
 
-export default async function Home() {
-  const branches = ALL_BRANCHES.map((b: any) => ({
-    id: b.id,
-    brand: b.brand,
-    name: b.name,
-    location: b.location,
-    themes: (ALL_THEMES as any[])
-      .filter((t: any) => t.branchId === b.id)
-      .map(({ id, name, emoji }: any) => ({ id, name, emoji })),
-  }))
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; location?: string; page?: string }>
+}) {
+  const { q = '', location = '전체', page: pageParam } = await searchParams
+
+  const allBranches = buildBranchList()
+
+  const locations = ['전체', ...new Set(allBranches.map((b: any) => b.location))]
+  const totalThemes = allBranches.reduce((sum: number, b: any) => sum + b.themes.length, 0)
+
+  const filtered = filterBranches(allBranches, q, location)
+  const { page, totalPages, pageBranches } = paginateBranches(filtered, pageParam)
 
   const rankedThemes = await fetchRankedThemes()
 
-  return <MainPage branches={branches} rankedThemes={rankedThemes} />
+  return (
+    <MainPage
+      branches={pageBranches}
+      rankedThemes={rankedThemes}
+      locations={locations}
+      totalThemes={totalThemes}
+      page={page}
+      totalPages={totalPages}
+      query={q}
+      location={location}
+    />
+  )
 }

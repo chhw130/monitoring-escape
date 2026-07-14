@@ -1,37 +1,80 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NotifyModal from './NotifyModal'
 import RankingSection from './RankingSection'
 import './MainPage.css'
 
-export default function MainPage({ branches, rankedThemes }) {
-  const [query, setQuery]         = useState('')
-  const [location, setLocation]   = useState('전체')
+const SEARCH_DEBOUNCE_MS = 300
+
+function Pagination({ page, totalPages, onChange }) {
+  if (totalPages <= 1) return null
+  return (
+    <nav className="pagination">
+      <button
+        className="pagination-btn"
+        disabled={page === 1}
+        onClick={() => onChange(page - 1)}
+      >
+        ‹
+      </button>
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+        <button
+          key={p}
+          className={`pagination-btn${p === page ? ' active' : ''}`}
+          onClick={() => onChange(p)}
+        >
+          {p}
+        </button>
+      ))}
+      <button
+        className="pagination-btn"
+        disabled={page === totalPages}
+        onClick={() => onChange(page + 1)}
+      >
+        ›
+      </button>
+    </nav>
+  )
+}
+
+export default function MainPage({
+  branches, rankedThemes, locations, totalThemes,
+  page, totalPages, query, location,
+}) {
+  const router = useRouter()
+  const [searchInput, setSearchInput] = useState(query)
   const [modalOpen, setModalOpen] = useState(false)
+  const debounceRef = useRef(null)
 
-  const locations = useMemo(() => {
-    const seen = new Set()
-    const result = ['전체']
-    branches.forEach(b => { if (!seen.has(b.location)) { seen.add(b.location); result.push(b.location) } })
-    return result
-  }, [branches])
+  useEffect(() => () => clearTimeout(debounceRef.current), [])
 
-  const totalThemes = useMemo(() => branches.reduce((s, b) => s + b.themes.length, 0), [branches])
+  const buildUrl = ({ nextQuery = query, nextLocation = location, nextPage = 1 }) => {
+    const params = new URLSearchParams()
+    if (nextQuery.trim()) params.set('q', nextQuery.trim())
+    if (nextLocation !== '전체') params.set('location', nextLocation)
+    if (nextPage > 1) params.set('page', String(nextPage))
+    const qs = params.toString()
+    return qs ? `/?${qs}` : '/'
+  }
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return branches.filter(b => {
-      if (location !== '전체' && b.location !== location) return false
-      if (!q) return true
-      return (
-        b.brand.toLowerCase().includes(q) ||
-        b.name.toLowerCase().includes(q) ||
-        b.location.toLowerCase().includes(q) ||
-        b.themes.some(t => t.name.toLowerCase().includes(q))
-      )
-    })
-  }, [query, location, branches])
+  // 검색어는 입력이 멈춘 뒤 URL에 반영해 서버에서 해당 페이지만 다시 받아온다
+  const handleSearchChange = (value) => {
+    setSearchInput(value)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      router.replace(buildUrl({ nextQuery: value }), { scroll: false })
+    }, SEARCH_DEBOUNCE_MS)
+  }
+
+  const handleLocationChange = (loc) => {
+    router.replace(buildUrl({ nextQuery: searchInput, nextLocation: loc }), { scroll: false })
+  }
+
+  const handlePageChange = (p) => {
+    router.push(buildUrl({ nextPage: p }))
+  }
 
   return (
     <div className="main-page">
@@ -54,7 +97,7 @@ export default function MainPage({ branches, rankedThemes }) {
             <button
               key={loc}
               className={`location-chip${location === loc ? ' active' : ''}`}
-              onClick={() => setLocation(loc)}
+              onClick={() => handleLocationChange(loc)}
             >
               {loc}
             </button>
@@ -64,18 +107,18 @@ export default function MainPage({ branches, rankedThemes }) {
           className="search-input"
           type="text"
           placeholder="지점명, 테마명으로 검색..."
-          value={query}
-          onChange={e => setQuery(e.target.value)}
+          value={searchInput}
+          onChange={e => handleSearchChange(e.target.value)}
         />
       </div>
 
       <RankingSection rankedThemes={rankedThemes} location={location} />
 
-      {filtered.length === 0 ? (
+      {branches.length === 0 ? (
         <p className="search-empty">조건에 맞는 지점이 없습니다.</p>
       ) : (
         <div className="branch-grid">
-          {filtered.map(branch => (
+          {branches.map(branch => (
             <Link key={branch.id} href={`/${branch.id}`} className="branch-card">
               <div className="branch-card-top">
                 <span className="branch-brand">{branch.brand}</span>
@@ -96,8 +139,10 @@ export default function MainPage({ branches, rankedThemes }) {
         </div>
       )}
 
+      <Pagination page={page} totalPages={totalPages} onChange={handlePageChange} />
+
       {modalOpen && (
-        <NotifyModal branches={branches} onClose={() => setModalOpen(false)} />
+        <NotifyModal onClose={() => setModalOpen(false)} />
       )}
     </div>
   )
