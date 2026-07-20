@@ -23,35 +23,49 @@ function normalizeTheme(name: string) {
   return name.replace(/\s*\([^)]*\)/g, '').trim()
 }
 
+type ColoryManifest = { areas: { area2: { name: string; slug: string }[] }[] }
+type ColoryRegion = { shops: { shop: string; themes: { theme: string; rating: number }[] }[] }
+
+// 코로리(colory.dev)는 지역명을 slug로 매핑해야 지역별 테마 데이터(JSON)를 조회할 수 있다
+async function fetchColoryRegionSlugs(locations: string[]): Promise<string[]> {
+  const res = await fetch('https://colory.dev/data/manifest.json', { next: { revalidate: 3600 } })
+  const manifest: ColoryManifest = await res.json()
+
+  const slugByName = new Map<string, string>()
+  for (const area1 of manifest.areas) {
+    for (const area2 of area1.area2) slugByName.set(area2.name, area2.slug)
+  }
+
+  return [...new Set(locations)]
+    .map(location => slugByName.get(location))
+    .filter((slug): slug is string => Boolean(slug))
+}
+
+// 일부 지역 데이터 fetch가 실패해도 나머지 지역 랭킹은 정상 노출되도록 allSettled로 처리
+async function fetchColoryRows(locations: string[]): Promise<{ store: string; theme: string; score: number }[]> {
+  const slugs = await fetchColoryRegionSlugs(locations)
+  const results = await Promise.allSettled(
+    slugs.map(slug =>
+      fetch(`https://colory.dev/data/regions/${slug}.json`, { next: { revalidate: 3600 } })
+        .then(res => res.json() as Promise<ColoryRegion>)
+    )
+  )
+
+  return results.flatMap(result => {
+    if (result.status !== 'fulfilled') {
+      console.error('코로리 지역 데이터 fetch 실패:', result.reason)
+      return []
+    }
+    return result.value.shops.flatMap(shop =>
+      shop.themes.map(t => ({ store: shop.shop, theme: t.theme, score: t.rating }))
+    )
+  })
+}
+
 async function fetchRankedThemes() {
   try {
-    const res = await fetch('https://colory.mooo.com/bba/ranking', {
-      next: { revalidate: 3600 },
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
-      },
-    })
-    const html = await res.text()
-
-    const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/g
-    const rows: { store: string; theme: string; score: number }[] = []
-    let rowMatch
-    while ((rowMatch = rowRegex.exec(html)) !== null) {
-      const row = rowMatch[1]
-      const cells: string[] = []
-      const cellRe = /class="rank-\d+">([\s\S]*?)<\/td>/g
-      let cellMatch
-      while ((cellMatch = cellRe.exec(row)) !== null) {
-        cells.push(cellMatch[1].replace(/<[^>]+>/g, '').trim())
-      }
-      if (cells.length >= 4) {
-        const isRanked = /^\d+$/.test(cells[0]) || row.includes('gold.svg') || row.includes('silver.svg') || row.includes('bronze.svg')
-        const score = parseFloat(cells[3])
-        if (isRanked && !isNaN(score)) {
-          rows.push({ store: cells[1], theme: cells[2], score })
-        }
-      }
-    }
+    const locations = ALL_BRANCHES.map((b: any) => b.location)
+    const rows = await fetchColoryRows(locations)
 
     const branchBrandMap = Object.fromEntries(ALL_BRANCHES.map((b: any) => [b.id, b.brand]))
     const branchLocationMap = Object.fromEntries(ALL_BRANCHES.map((b: any) => [b.id, b.location]))

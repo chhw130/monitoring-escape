@@ -28,7 +28,7 @@ export default function RankingSection({ rankedThemes, location }) {
         <span className="ranking-title">🏆 코방 랭킹 기준</span>
         <a
           className="ranking-source"
-          href="https://colory.mooo.com/bba/ranking"
+          href="https://colory.dev/ranking"
           target="_blank"
           rel="noopener noreferrer"
         >
