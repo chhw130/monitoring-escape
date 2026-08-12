@@ -42,7 +42,9 @@ export default function RankingSection({ rankedThemes, location }) {
             <th className="col-rank">순위</th>
             <th className="col-theme">테마</th>
             <th className="col-branch">지점</th>
-            <th className="col-score">평점</th>
+            <th className="col-score">별점</th>
+            <th className="col-difficulty">난이도</th>
+            <th className="col-fear">공포도</th>
           </tr>
         </thead>
         <tbody>
@@ -61,6 +63,8 @@ export default function RankingSection({ rankedThemes, location }) {
                 </td>
                 <td className="col-branch">{theme.branch}</td>
                 <td className="col-score">{theme.score}</td>
+                <td className="col-difficulty">{theme.difficulty}/10</td>
+                <td className="col-fear">{theme.fear}/5</td>
               </tr>
             )
           })}
