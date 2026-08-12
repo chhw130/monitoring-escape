@@ -23,43 +23,21 @@ function normalizeTheme(name: string) {
   return name.replace(/\s*\([^)]*\)/g, '').trim()
 }
 
-type ColoryManifest = { areas: { area2: { name: string; slug: string }[] }[] }
-type ColoryRegion = { shops: { shop: string; themes: { theme: string; rating: number }[] }[] }
-
-// 코로리(colory.dev)는 지역명을 slug로 매핑해야 지역별 테마 데이터(JSON)를 조회할 수 있다
-async function fetchColoryRegionSlugs(locations: string[]): Promise<string[]> {
-  const res = await fetch('https://colory.dev/data/manifest.json', { next: { revalidate: 3600 } })
-  const manifest: ColoryManifest = await res.json()
-
-  const slugByName = new Map<string, string>()
-  for (const area1 of manifest.areas) {
-    for (const area2 of area1.area2) slugByName.set(area2.name, area2.slug)
-  }
-
-  return [...new Set(locations)]
-    .map(location => slugByName.get(location))
-    .filter((slug): slug is string => Boolean(slug))
+type ColoryRegions = {
+  regions: { region: { area2: string }; shops: { shop: string; themes: { theme: string; rating: number; difficulty: number; fear: number }[] }[] }[]
 }
 
-// 일부 지역 데이터 fetch가 실패해도 나머지 지역 랭킹은 정상 노출되도록 allSettled로 처리
-async function fetchColoryRows(locations: string[]): Promise<{ store: string; theme: string; score: number }[]> {
-  const slugs = await fetchColoryRegionSlugs(locations)
-  const results = await Promise.allSettled(
-    slugs.map(slug =>
-      fetch(`https://colory.dev/data/regions/${slug}.json`, { next: { revalidate: 3600 } })
-        .then(res => res.json() as Promise<ColoryRegion>)
-    )
-  )
+// 코로리(colory.dev)는 전체 지역 데이터를 단일 JSON(/data/regions.json)으로 제공한다
+async function fetchColoryRows(locations: string[]): Promise<{ store: string; theme: string; score: number; difficulty: number; fear: number }[]> {
+  const res = await fetch('https://colory.dev/data/regions.json', { next: { revalidate: 3600 } })
+  const data: ColoryRegions = await res.json()
 
-  return results.flatMap(result => {
-    if (result.status !== 'fulfilled') {
-      console.error('코로리 지역 데이터 fetch 실패:', result.reason)
-      return []
-    }
-    return result.value.shops.flatMap(shop =>
-      shop.themes.map(t => ({ store: shop.shop, theme: t.theme, score: t.rating }))
-    )
-  })
+  const locationSet = new Set(locations)
+  return data.regions
+    .filter(r => locationSet.has(r.region.area2))
+    .flatMap(r => r.shops.flatMap(shop =>
+      shop.themes.map(t => ({ store: shop.shop, theme: t.theme, score: t.rating, difficulty: t.difficulty, fear: t.fear }))
+    ))
 }
 
 async function fetchRankedThemes() {
@@ -70,7 +48,7 @@ async function fetchRankedThemes() {
     const branchBrandMap = Object.fromEntries(ALL_BRANCHES.map((b: any) => [b.id, b.brand]))
     const branchLocationMap = Object.fromEntries(ALL_BRANCHES.map((b: any) => [b.id, b.location]))
     const seen = new Set<string>()
-    const matched: { themeId: string; themeName: string; themeEmoji: string; branchId: string; branch: string; location: string; score: number }[] = []
+    const matched: { themeId: string; themeName: string; themeEmoji: string; branchId: string; branch: string; location: string; score: number; difficulty: number; fear: number }[] = []
 
     for (const row of rows) {
       const normalizedColory = normalizeTheme(row.theme)
@@ -85,7 +63,7 @@ async function fetchRankedThemes() {
             ? normalizedColory.includes('피노키오')
             : normalizedColory.includes(normalizedOurs) || normalizedOurs.includes(normalizedColory)
         if (nameMatches) {
-          matched.push({ themeId: theme.id, themeName: theme.name, themeEmoji: theme.emoji, branchId: theme.branchId, branch: theme.branch, location: branchLocationMap[theme.branchId] || '', score: row.score })
+          matched.push({ themeId: theme.id, themeName: theme.name, themeEmoji: theme.emoji, branchId: theme.branchId, branch: theme.branch, location: branchLocationMap[theme.branchId] || '', score: row.score, difficulty: row.difficulty, fear: row.fear })
           seen.add(theme.id)
           break
         }

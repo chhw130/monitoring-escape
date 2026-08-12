@@ -109,6 +109,16 @@
   white-space: nowrap;
 }
 
+.col-difficulty,
+.col-fear {
+  width: 56px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .ranking-pagination {
   display: flex;
   align-items: center;
