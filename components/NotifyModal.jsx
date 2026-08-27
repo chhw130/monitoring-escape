@@ -218,9 +218,18 @@ export default function NotifyModal({ onClose }) {
     })
   }, [])
 
-  const disableAll = useCallback(() => {
-    updateCurrent(ch => ({ ...ch, notifyThemes: new Set() }))
-  }, [updateCurrent])
+  // 채널 알림 설정 전체 초기화 (시간대·테마 선택·커스텀 설정·채널 ON/OFF를 기본값으로 되돌림)
+  const resetChannel = useCallback(() => {
+    if (!window.confirm(`${activeTabRef.current}채널의 알림 설정을 모두 초기화할까요?\n(알림 시간대, 테마 선택, 커스텀 설정이 기본값으로 되돌아갑니다)`)) return
+    updateCurrent(() => ({
+      dayMin: [...DEFAULT_DAY_MIN],
+      dayMax: [...DEFAULT_DAY_MAX],
+      notifyThemes: new Set(allIds),
+      themeSettings: {},
+      openCustom: new Set(),
+      disabled: false,
+    }))
+  }, [updateCurrent, allIds])
 
   const toggleTheme = useCallback((id) => {
     updateCurrent(ch => {
@@ -382,7 +391,7 @@ export default function NotifyModal({ onClose }) {
           <section className="modal-section">
             <div className="modal-section-header">
               <h3 className="modal-section-title">알림 테마</h3>
-              <button className="modal-disable-all-btn" onClick={disableAll}>{activeTab}채널 알림 초기화</button>
+              <button className="modal-disable-all-btn" onClick={resetChannel}>{activeTab}채널 알림 초기화</button>
             </div>
 
             <div className="modal-filter-bar">
